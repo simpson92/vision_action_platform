@@ -2,10 +2,20 @@
 {% load static %}
 {% block title %}AI 분석{% endblock %}
 {% block content %}
+<!-- 상단 지표 4개: 본인 작업 ORM 집계 (분석이 끝나면 /api/analyses/stats/ 로 다시 채움) -->
+<div class="kpis" id="kpis">
+  <div class="kpi"><div><div class="lbl">내 분석</div><div class="val" data-k="total">-</div><div class="sub" data-k="total-sub"></div></div><canvas class="spark" width="90" height="38" data-spark="count"></canvas></div>
+  <div class="kpi"><div><div class="lbl">처리 성공률</div><div class="val" data-k="success">-</div><div class="sub" data-k="success-sub"></div></div><canvas class="spark" width="90" height="38" data-spark="success"></canvas></div>
+  <div class="kpi"><div><div class="lbl">확정 판단 비율</div><div class="val" data-k="decided">-</div><div class="sub" data-k="decided-sub"></div></div><canvas class="spark" width="90" height="38" data-spark="decided"></canvas></div>
+  <div class="kpi"><div><div class="lbl">평균 AI 처리</div><div class="val" data-k="seconds">-</div><div class="sub" data-k="seconds-sub"></div></div><canvas class="spark" width="90" height="38" data-spark="seconds"></canvas></div>
+</div>
+
 <div class="grid">
   <section class="card">
-    <h1>AI 동작 분석</h1>
-    <p class="muted">6개 동작(허리 굽히기, 다리 들기, 걷다 돌기, 마시기, 앉았다 일어서기, 손 흔들기)을 인식합니다.</p>
+    <div class="cardhead"><div>
+      <h1>AI 동작 분석</h1>
+      <div class="muted">6개 동작(허리 굽히기, 다리 들기, 걷다 돌기, 마시기, 앉았다 일어서기, 손 흔들기)을 인식합니다.</div>
+    </div></div>
 
     <div class="tabs" role="tablist">
       <button type="button" class="tab active" data-input="upload" role="tab">영상 업로드</button>
@@ -53,19 +63,37 @@
   </section>
 
   <section class="card" id="result-card">
-    <h2>분석 결과</h2>
+    <div class="cardhead"><h2>분석 결과</h2><span class="muted" id="result-meta"></span></div>
     <ol class="steps" id="steps">
       <li data-step="PENDING">대기</li>
       <li data-step="STARTED">처리 중</li>
       <li data-step="DONE">완료</li>
     </ol>
-    <div id="result-empty" class="muted">분석을 시작하면 여기에 사람별 결과가 표시됩니다.</div>
+    <div id="result-empty" class="muted">분석을 시작하면 여기에 사람별 결과가 표시됩니다.<br>
+      Confidence는 Random Forest 나무들 중 그 동작에 투표한 비율이며, 6개 동작을 무작위로 고르면 {{ rules.chance_pct|floatformat:"-1" }}%입니다.</div>
     <div id="result-body" hidden>
-      <p id="result-meta" class="muted"></p>
       <div id="result-error" class="error" hidden></div>
+      <div class="metrics" id="job-metrics" hidden>
+        <div><span>분석 사람</span><b data-m="people">-</b></div>
+        <div><span>AI 처리</span><b data-m="ai">-</b></div>
+        <div><span>요청 → 완료</span><b data-m="total">-</b></div>
+        <div><span>영상 길이</span><b data-m="video">-</b></div>
+      </div>
       <div id="people"></div>
-      <a id="detail-link" class="muted" href="#">상세 보기 →</a>
+      <a id="detail-link" href="#">상세 보기 →</a>
     </div>
+  </section>
+</div>
+
+<div class="grid-wide">
+  <section class="card">
+    <div class="cardhead"><h2>최근 분석 Confidence 추이</h2>
+      <div class="legend"><span><i style="background:var(--primary)"></i>1등 확률</span><span><i style="background:var(--warn)"></i>확정 기준 {{ rules.confidence_pct|floatformat:"-1" }}%</span><span><i style="background:var(--muted)"></i>무작위 {{ rules.chance_pct|floatformat:"-1" }}%</span></div></div>
+    <div class="chartbox"><canvas id="trendChart"></canvas></div>
+  </section>
+  <section class="card">
+    <div class="cardhead"><h2>내 결과 동작 분포</h2><span class="muted" id="dist-sub"></span></div>
+    <div class="chartbox"><canvas id="distChart"></canvas></div>
   </section>
 </div>
 
@@ -75,24 +103,33 @@
     <button type="button" class="link danger" id="clear-history">전체 지우기</button>
   </div>
   <table class="table" id="history">
-    <thead><tr><th>#</th><th>시간</th><th>입력</th><th>상태</th><th>결과</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th>시간</th><th>입력</th><th>상태</th><th>결과</th><th>Confidence</th><th>실제 동작</th><th></th></tr></thead>
     <tbody>
       {% for job in recent %}
+      {% with top=job.top_prediction state=job.match_state %}
       <tr data-id="{{ job.id }}">
         <td>{{ job.id }}</td>
         <td>{{ job.created_at|date:"m/d H:i" }}</td>
         <td>{{ job.get_input_type_display }}</td>
         <td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td>
-        <td>{% for p in job.predictions.all %}<span class="chip">#{{ p.track_id }} {{ p.action_display }} {{ p.confidence|floatformat:2 }}</span>{% empty %}{{ job.error_message|default:job.result_message|default:"-"|truncatechars:40 }}{% endfor %}</td>
+        <td>{% for p in job.predictions.all %}<span class="chip{% if not p.is_decided %} hold{% endif %}">#{{ p.track_id }} {{ p.action_display }}</span>{% empty %}<span class="muted">{{ job.error_message|default:job.result_message|default:"-"|truncatechars:40 }}</span>{% endfor %}</td>
+        <td>{% if top %}<span class="mini"><i style="width:{% widthratio top.confidence 1 100 %}%"></i></span>{{ top.confidence|floatformat:2 }}{% else %}<span class="muted">-</span>{% endif %}</td>
+        <td>{% if state == "match" %}<span class="m-match">✓ 일치</span>{% elif state == "mismatch" %}<span class="m-mismatch">✗ {{ job.get_expected_action_display }}</span>{% elif state == "hold" %}<span class="m-hold">보류</span>{% else %}<span class="muted">{{ job.get_expected_action_display|default:"-" }}</span>{% endif %}</td>
         <td class="actions"><a href="{% url 'analyses:detail' job.id %}">상세</a> <button type="button" class="link danger del-job">삭제</button></td>
       </tr>
+      {% endwith %}
       {% empty %}
-      <tr class="empty"><td colspan="6" class="muted">아직 분석 기록이 없습니다.</td></tr>
+      <tr class="empty"><td colspan="8" class="muted">아직 분석 기록이 없습니다.</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </section>
+{{ stats|json_script:"stats-data" }}
+{{ rules|json_script:"rules-data" }}
+{{ actions|json_script:"actions-data" }}
 {% endblock %}
 {% block scripts %}
+<!-- Chart.js 4.4.1 (MIT): 시연장 인터넷이 없어도 차트가 보이도록 저장소에 포함 -->
+<script src="{% static 'vendor/chart.umd.js' %}"></script>
 <script src="{% static 'js/analyses.js' %}"></script>
 {% endblock %}

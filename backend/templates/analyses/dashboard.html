@@ -7,15 +7,15 @@
   <div class="stat"><span>분석 작업</span><b>{{ summary.jobs }}</b></div>
   <div class="stat"><span>요청 사용자</span><b>{{ summary.users }}</b></div>
   <div class="stat"><span>사람별 예측</span><b>{{ summary.predictions }}</b></div>
-  <div class="stat"><span>실패 작업</span><b>{{ summary.failures }}</b></div>
+  <div class="stat bad"><span>실패 작업</span><b>{{ summary.failures }}</b></div>
 </div>
 <div class="grid">
-  <section class="card"><h2>동작별 예측 건수</h2><canvas id="actionChart" height="240"></canvas></section>
-  <section class="card"><h2>작업 상태별 건수</h2><canvas id="statusChart" height="240"></canvas></section>
+  <section class="card"><div class="cardhead"><h2>동작별 예측 건수</h2></div><div class="chartbox"><canvas id="actionChart"></canvas></div></section>
+  <section class="card"><div class="cardhead"><h2>작업 상태별 건수</h2></div><div class="chartbox"><canvas id="statusChart"></canvas></div></section>
 </div>
-<section class="card"><h2>입력 방식별 건수 · 평균 AI 처리 시간</h2><canvas id="inputChart" height="120"></canvas></section>
+<section class="card"><div class="cardhead"><h2>입력 방식별 건수 · 평균 AI 처리 시간</h2></div><div class="chartbox short"><canvas id="inputChart"></canvas></div></section>
 <section class="card">
-  <h2>최근 작업 (전체 사용자)</h2>
+  <div class="cardhead"><h2>최근 작업 (전체 사용자)</h2></div>
   <table class="table">
     <thead><tr><th>#</th><th>사용자</th><th>입력</th><th>상태</th><th>결과</th><th>시간</th></tr></thead>
     <tbody>

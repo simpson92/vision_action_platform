@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Vision Action{% endblock %} · 동작 인식</title>
   <link rel="icon" href="{% static 'favicon.svg' %}">
+  <!-- 인터넷이 없으면 글꼴만 시스템 글꼴로 바뀌고 화면은 그대로 동작합니다 -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   {% block head %}{% endblock %}
 </head>
@@ -13,16 +15,20 @@
   <a class="brand" href="{% url 'analyses:index' %}"><span class="logo">◉</span> Vision Action</a>
   <nav>
     {% if user.is_authenticated %}
-      <a href="{% url 'analyses:index' %}">AI 분석</a>
+      {% with page=request.resolver_match.url_name %}
+      <a href="{% url 'analyses:index' %}"{% if page == 'index' or page == 'detail' %} class="on"{% endif %}>AI 분석</a>
       {% if user.is_staff %}
-        <a href="{% url 'analyses:dashboard' %}">대시보드</a>
+        <a href="{% url 'analyses:dashboard' %}"{% if page == 'dashboard' %} class="on"{% endif %}>대시보드</a>
         <a href="{% url 'admin:index' %}">관리자</a>
       {% endif %}
+      {% endwith %}
       <span class="who">{{ user.username }}{% if user.is_staff %} · 관리자{% endif %}</span>
       <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button class="link">로그아웃</button></form>
     {% else %}
-      <a href="{% url 'login' %}">로그인</a>
-      <a href="{% url 'signup' %}">회원가입</a>
+      {% with page=request.resolver_match.url_name %}
+      <a href="{% url 'login' %}"{% if page == 'login' %} class="on"{% endif %}>로그인</a>
+      <a href="{% url 'signup' %}"{% if page == 'signup' %} class="on"{% endif %}>회원가입</a>
+      {% endwith %}
     {% endif %}
   </nav>
 </header>

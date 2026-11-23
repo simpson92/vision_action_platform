@@ -8,31 +8,37 @@
   const actions = read("action-data");
   const statuses = read("status-data");
   const inputs = read("input-data");
+  const css = getComputedStyle(document.documentElement);
+  const v = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+  const C = { primary: v("--primary", "#8b5cf6"), primary2: v("--primary2", "#c4b5fd"), muted: v("--muted", "#9a9fbd"),
+    line: v("--line2", "#272b45"), ok: v("--ok", "#34d399"), warn: v("--warn", "#fbbf24"), bad: v("--bad", "#fb7185"),
+    text: v("--text", "#e8e9f3"), card: v("--card", "#181c2e") };
   Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
-  Chart.defaults.color = getComputedStyle(document.body).getPropertyValue("--muted").trim() || "#667";
+  Chart.defaults.color = C.muted;
+  Chart.defaults.borderColor = C.line;
 
-  const STATUS_COLORS = { PENDING: "#9aa4b2", STARTED: "#e0a526", SUCCESS: "#2e9e6a", FAILURE: "#d6455d" };
+  const STATUS_COLORS = { PENDING: C.muted, STARTED: C.warn, SUCCESS: C.ok, FAILURE: C.bad };
 
   new Chart(document.getElementById("actionChart"), {
     type: "bar",
     data: { labels: actions.labels, datasets: [{ label: "예측 건수", data: actions.values,
-      backgroundColor: actions.labels.map((_, i) => (i === actions.labels.length - 1 ? "#b8bfca" : "#2f6fde")), borderRadius: 6 }] },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+      backgroundColor: actions.labels.map((_, i) => (i === actions.labels.length - 1 ? C.muted + "88" : C.primary)), borderRadius: 6 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
   });
 
   new Chart(document.getElementById("statusChart"), {
     type: "doughnut",
-    data: { labels: statuses.labels, datasets: [{ data: statuses.values, backgroundColor: statuses.keys.map((k) => STATUS_COLORS[k]) }] },
-    options: { plugins: { legend: { position: "bottom" } } },
+    data: { labels: statuses.labels, datasets: [{ data: statuses.values, backgroundColor: statuses.keys.map((k) => STATUS_COLORS[k]), borderColor: C.card, borderWidth: 2 }] },
+    options: { maintainAspectRatio: false, cutout: "58%", plugins: { legend: { position: "bottom", labels: { color: C.text } } } },
   });
 
   new Chart(document.getElementById("inputChart"), {
     type: "bar",
     data: { labels: inputs.labels, datasets: [
-      { label: "작업 수", data: inputs.values, backgroundColor: "#2f6fde", borderRadius: 6, yAxisID: "y" },
-      { label: "평균 AI 처리 시간(초)", data: inputs.avg_seconds, backgroundColor: "#e0a526", borderRadius: 6, yAxisID: "y1" },
+      { label: "작업 수", data: inputs.values, backgroundColor: C.primary, borderRadius: 6, yAxisID: "y" },
+      { label: "평균 AI 처리 시간(초)", data: inputs.avg_seconds, backgroundColor: C.warn, borderRadius: 6, yAxisID: "y1" },
     ] },
-    options: { indexAxis: "x", scales: { y: { beginAtZero: true, ticks: { precision: 0 }, position: "left" },
+    options: { maintainAspectRatio: false, indexAxis: "x", scales: { y: { beginAtZero: true, ticks: { precision: 0 }, position: "left" },
       y1: { beginAtZero: true, position: "right", grid: { drawOnChartArea: false } } } },
   });
 })();

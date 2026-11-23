@@ -101,6 +101,11 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "50"))
 
+# 화면 설명용: FastAPI가 "판단 보류"를 정하는 기준과 같은 .env 값을 읽어 결과 카드에 보여 줍니다.
+CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", "0.20"))
+MARGIN_THRESHOLD = float(os.getenv("MARGIN_THRESHOLD", "0.03"))
+ACTION_CLASS_COUNT = 6
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "login"

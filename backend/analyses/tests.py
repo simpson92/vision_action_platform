@@ -168,3 +168,19 @@ class AnalysisApiTests(TestCase):
         self.assertContains(r, "AI 분석 시작")
         self.assertContains(r, "카메라 1")
         self.assertNotContains(r, "cam.local")  # 카메라 주소는 화면에 노출하지 않음
+
+    # 분석 화면 상단 지표·그래프: 본인 작업만 집계
+    @mock.patch("analyses.tasks.predict_video", return_value=FAKE_RESULT)
+    def test_stats_counts_only_my_jobs(self, _):
+        run_analysis.apply(args=[self.create_job(self.a, expected_action="bend_return").pk])
+        run_analysis.apply(args=[self.create_job(self.b).pk])
+        self.client.force_login(self.a)
+        s = self.client.get("/api/analyses/stats/").json()
+        self.assertEqual((s["total"], s["success"], s["predictions"], s["undecided"]), (1, 1, 2, 1))
+        self.assertEqual(s["decided_rate"], 50)
+        self.assertEqual((s["matched"], s["labelled"]), (1, 1))
+        self.assertEqual(s["trend"][0]["confidence"], 0.28)
+        self.assertEqual(s["distribution"]["values"][0], 1)  # bend_return
+        r = self.client.get(reverse("analyses:index"))
+        self.assertContains(r, "✓ 일치")
+        self.assertContains(r, 'id="stats-data"')

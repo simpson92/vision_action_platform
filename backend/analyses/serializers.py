@@ -95,4 +95,4 @@ class AnalysisStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnalysisJob
         fields = ("id", "status", "status_display", "is_finished", "error_message", "result_message",
-                  "processing_ms", "total_seconds", "predictions")
+                  "expected_action", "video_duration_sec", "processing_ms", "total_seconds", "predictions")

@@ -20,7 +20,7 @@
   {% if job.video %}<video src="{{ job.video.url }}" controls muted class="player"></video>{% endif %}
 </section>
 <section class="card">
-  <h2>사람별 예측 ({{ job.predictions.count }}명)</h2>
+  <div class="cardhead"><h2>사람별 예측 ({{ job.predictions.count }}명)</h2></div>
   <table class="table">
     <thead><tr><th>Track ID</th><th>동작</th><th>1등(기준 전)</th><th>Confidence</th><th>2등과 차이</th><th>Frame</th><th>입력 품질</th><th>구간</th></tr></thead>
     <tbody>
