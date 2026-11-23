@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}AI 분석{% endblock %}
+{% block content %}
+<div class="grid">
+  <section class="card">
+    <h1>AI 동작 분석</h1>
+    <p class="muted">6개 동작(허리 굽히기, 다리 들기, 걷다 돌기, 마시기, 앉았다 일어서기, 손 흔들기)을 인식합니다.</p>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" data-input="upload" role="tab">영상 업로드</button>
+      <button type="button" class="tab" data-input="ip_webcam" role="tab">IP Webcam</button>
+    </div>
+
+    <form id="analysis-form">
+      {% csrf_token %}
+      <input type="hidden" name="input_type" value="upload">
+
+      <div class="pane" data-pane="upload">
+        <label class="drop" id="drop">
+          <input type="file" name="video" accept="video/*">
+          <span id="drop-text">MP4 영상을 끌어다 놓거나 눌러서 선택 (최대 {{ max_upload_mb }}MB)</span>
+        </label>
+        <video id="preview" controls muted hidden></video>
+      </div>
+
+      <div class="pane" data-pane="ip_webcam" hidden>
+        {% if cameras %}
+          <label>카메라
+            <select name="camera_index">
+              {% for c in cameras %}<option value="{{ c.index }}">{{ c.name }}</option>{% endfor %}
+            </select>
+          </label>
+          <p class="muted">분석 시작을 누르면 서버가 카메라에서 <b>{{ capture_seconds|floatformat:0 }}초</b> 동안 영상을 받아 분석합니다. 버튼을 누른 뒤 카메라 앞에서 동작해 주세요.</p>
+        {% else %}
+          <p class="error">허용된 IP Webcam이 없습니다. 관리자가 .env의 IP_WEBCAM_ALLOWED_URLS를 설정해야 합니다.</p>
+        {% endif %}
+      </div>
+
+      <div class="row">
+        <label>제목 (선택) <input type="text" name="title" maxlength="100" placeholder="예: 앉았다 일어나기 테스트"></label>
+        <label>실제로 한 동작 (선택)
+          <select name="expected_action">
+            <option value="">선택 안 함</option>
+            {% for key, label in actions %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+          </select>
+        </label>
+      </div>
+
+      <button type="submit" class="primary wide" id="start-btn">AI 분석 시작</button>
+      <div id="form-error" class="error" hidden></div>
+    </form>
+  </section>
+
+  <section class="card" id="result-card">
+    <h2>분석 결과</h2>
+    <ol class="steps" id="steps">
+      <li data-step="PENDING">대기</li>
+      <li data-step="STARTED">처리 중</li>
+      <li data-step="DONE">완료</li>
+    </ol>
+    <div id="result-empty" class="muted">분석을 시작하면 여기에 사람별 결과가 표시됩니다.</div>
+    <div id="result-body" hidden>
+      <p id="result-meta" class="muted"></p>
+      <div id="result-error" class="error" hidden></div>
+      <div id="people"></div>
+      <a id="detail-link" class="muted" href="#">상세 보기 →</a>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>최근 분석 이력</h2>
+  <table class="table" id="history">
+    <thead><tr><th>#</th><th>시간</th><th>입력</th><th>상태</th><th>결과</th><th></th></tr></thead>
+    <tbody>
+      {% for job in recent %}
+      <tr data-id="{{ job.id }}">
+        <td>{{ job.id }}</td>
+        <td>{{ job.created_at|date:"m/d H:i" }}</td>
+        <td>{{ job.get_input_type_display }}</td>
+        <td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td>
+        <td>{% for p in job.predictions.all %}<span class="chip">#{{ p.track_id }} {{ p.action_display }} {{ p.confidence|floatformat:2 }}</span>{% empty %}{{ job.error_message|default:job.result_message|default:"-"|truncatechars:40 }}{% endfor %}</td>
+        <td><a href="{% url 'analyses:detail' job.id %}">상세</a></td>
+      </tr>
+      {% empty %}
+      <tr class="empty"><td colspan="6" class="muted">아직 분석 기록이 없습니다.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/analyses.js' %}"></script>
+{% endblock %}

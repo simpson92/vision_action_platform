@@ -1,4 +1,75 @@
-# 5개 서비스: django · fastapi · celery · redis · postgres
-# 서비스 간 통신은 localhost가 아니라 서비스 이름(예: http://fastapi:8000, redis://redis:6379/0) 사용
-# TODO: 직접 작성
-services: {}
+# 5개 서비스: django · celery · fastapi · redis · postgres
+# 서비스 간 통신은 localhost가 아니라 서비스 이름 사용 (예: http://fastapi:8000, redis://redis:6379/0)
+name: vision_action_platform
+
+x-backend-env: &backend-env
+  POSTGRES_HOST: postgres
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/1
+  FASTAPI_URL: http://fastapi:8000
+  MEDIA_ROOT: /app/media
+
+services:
+  django:
+    build: ./backend
+    env_file: .env
+    environment:
+      <<: *backend-env
+      RUN_MIGRATIONS: "1"
+    ports:
+      - "8000:8000"                      # 브라우저에 공개하는 건 django 하나
+    volumes:
+      - media_data:/app/media            # 업로드·IP Webcam 영상: django와 celery가 같이 봄
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  celery:
+    build: ./backend                     # django와 같은 코드·이미지, 실행 명령만 다름
+    command: celery -A config worker --loglevel=info --concurrency=1
+    env_file: .env
+    environment:
+      <<: *backend-env
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      fastapi: { condition: service_started }
+    restart: unless-stopped
+
+  fastapi:
+    build: ./ai_service
+    env_file: .env
+    environment:
+      MODEL_DIR: /app/models
+    ports:
+      - "8001:8000"                      # 개발·시연용 http://localhost:8001/docs (필요 없으면 지워도 됨)
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # 컨테이너를 다시 만들어도 DB 유지
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  media_data:

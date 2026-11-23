@@ -1,6 +1,5 @@
 # 원본(KH_Project_Subject1010/.venv, Python 3.12.16)에서 확인한 버전과 맞춤
-# Docker 이미지: python:3.12-slim 사용
---extra-index-url https://download.pytorch.org/whl/cpu
+# Docker 이미지: python:3.12-slim. torch는 Dockerfile에서 CPU 전용 판을 먼저 설치(이미지 크기 절약)
 scikit-learn==1.9.1
 numpy==2.5.4
 pandas==3.1.1

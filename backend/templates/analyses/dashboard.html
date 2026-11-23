@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}관리자 대시보드{% endblock %}
+{% block content %}
+<h1>관리자 대시보드</h1>
+<div class="stats">
+  <div class="stat"><span>분석 작업</span><b>{{ summary.jobs }}</b></div>
+  <div class="stat"><span>요청 사용자</span><b>{{ summary.users }}</b></div>
+  <div class="stat"><span>사람별 예측</span><b>{{ summary.predictions }}</b></div>
+  <div class="stat"><span>실패 작업</span><b>{{ summary.failures }}</b></div>
+</div>
+<div class="grid">
+  <section class="card"><h2>동작별 예측 건수</h2><canvas id="actionChart" height="240"></canvas></section>
+  <section class="card"><h2>작업 상태별 건수</h2><canvas id="statusChart" height="240"></canvas></section>
+</div>
+<section class="card"><h2>입력 방식별 건수 · 평균 AI 처리 시간</h2><canvas id="inputChart" height="120"></canvas></section>
+<section class="card">
+  <h2>최근 작업 (전체 사용자)</h2>
+  <table class="table">
+    <thead><tr><th>#</th><th>사용자</th><th>입력</th><th>상태</th><th>결과</th><th>시간</th></tr></thead>
+    <tbody>
+    {% for job in recent %}
+      <tr><td><a href="{% url 'analyses:detail' job.id %}">{{ job.id }}</a></td><td>{{ job.user.username }}</td><td>{{ job.get_input_type_display }}</td>
+        <td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td>
+        <td>{% for p in job.predictions.all %}<span class="chip">#{{ p.track_id }} {{ p.action_display }}</span>{% empty %}{{ job.error_message|truncatechars:30|default:"-" }}{% endfor %}</td>
+        <td>{{ job.created_at|date:"m/d H:i" }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="muted">아직 작업이 없습니다.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{{ action_chart|json_script:"action-data" }}
+{{ status_chart|json_script:"status-data" }}
+{{ input_chart|json_script:"input-data" }}
+{% endblock %}
+{% block scripts %}
+<!-- Chart.js 4.4.1 (MIT): 시연장 인터넷이 없어도 차트가 보이도록 저장소에 포함 -->
+<script src="{% static 'vendor/chart.umd.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

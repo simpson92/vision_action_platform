@@ -5,12 +5,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     YOLO_CONFIG_DIR=/tmp/ultralytics \
     YOLO_OFFLINE=1
 
-# OpenCV(headless)가 영상 디코딩에 쓰는 라이브러리
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+# opencv-python-headless는 libGL 등 시스템 패키지가 필요 없어 apt 설치 단계를 두지 않음
 
 WORKDIR /app
+# GPU가 없는 컨테이너라 CPU 전용 torch를 먼저 설치 (CUDA 판보다 수 GB 작음)
+ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch==2.15.0 --index-url ${TORCH_INDEX_URL}
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}분석 #{{ job.id }}{% endblock %}
+{% block content %}
+<section class="card">
+  <p><a href="{% url 'analyses:index' %}">← 분석 화면</a></p>
+  <h1>분석 #{{ job.id }} {% if job.title %}· {{ job.title }}{% endif %}</h1>
+  <table class="kv">
+    <tr><th>요청 사용자</th><td>{{ job.user.username }}</td></tr>
+    <tr><th>입력 방식</th><td>{{ job.get_input_type_display }}{% if job.capture_seconds %} ({{ job.capture_seconds|floatformat:0 }}초 수집){% endif %}</td></tr>
+    <tr><th>상태</th><td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td></tr>
+    <tr><th>실제로 한 동작(사용자 선택)</th><td>{{ job.get_expected_action_display|default:"-" }}</td></tr>
+    <tr><th>영상 길이</th><td>{{ job.video_duration_sec|default:"-" }}초</td></tr>
+    <tr><th>AI 처리 시간</th><td>{% if job.processing_ms %}{{ job.processing_ms }}ms{% else %}-{% endif %}</td></tr>
+    <tr><th>요청 → 완료</th><td>{{ job.total_seconds|default:"-" }}초</td></tr>
+    <tr><th>생성 / 완료</th><td>{{ job.created_at|date:"Y-m-d H:i:s" }} / {{ job.completed_at|date:"H:i:s"|default:"-" }}</td></tr>
+    {% if job.error_message %}<tr><th>오류</th><td class="error">{{ job.error_message }}</td></tr>{% endif %}
+    {% if job.result_message %}<tr><th>메시지</th><td>{{ job.result_message }}</td></tr>{% endif %}
+    {% if job.memo %}<tr><th>메모</th><td>{{ job.memo|linebreaksbr }}</td></tr>{% endif %}
+  </table>
+  {% if job.video %}<video src="{{ job.video.url }}" controls muted class="player"></video>{% endif %}
+</section>
+<section class="card">
+  <h2>사람별 예측 ({{ job.predictions.count }}명)</h2>
+  <table class="table">
+    <thead><tr><th>Track ID</th><th>동작</th><th>1등(기준 전)</th><th>Confidence</th><th>2등과 차이</th><th>Frame</th><th>입력 품질</th><th>구간</th></tr></thead>
+    <tbody>
+    {% for p in job.predictions.all %}
+      <tr><td>#{{ p.track_id }}</td><td><b>{{ p.action_display }}</b></td><td>{{ p.raw_label|default:"-" }}</td>
+        <td>{{ p.confidence|floatformat:3 }}</td><td>{{ p.margin|floatformat:3 }}</td><td>{{ p.valid_frames }}</td>
+        <td>{{ p.input_quality }}</td><td>{{ p.start_sec|default:"-" }}~{{ p.end_sec|default:"-" }}초</td></tr>
+    {% empty %}<tr><td colspan="8" class="muted">예측 결과가 없습니다.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">예측은 정답 판정이 아닙니다. 학습 데이터가 적어 새 사람·환경에서는 틀릴 수 있어, 확률이 낮거나 1·2등 차이가 작으면 "판단 보류"로 표시합니다.</p>
+</section>
+{% endblock %}
