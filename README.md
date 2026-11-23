@@ -302,18 +302,20 @@ sequenceDiagram
 
 ### 기능 테스트 (과제 11장)
 
-| 테스트 | 확인 방법 | 결과 |
-|---|---|---|
-| T01 모델 불러오기 | `GET /health`, `test_health_model_ready` | 6 Class · 1,140 Feature ([캡처](docs/images/t01_health.png)) |
-| T02 영상 업로드 | S03 영상 업로드 | 작업 등록 → 사람별 결과 ([캡처](docs/images/analysis.png)) |
-| T03 IP Webcam | 휴대폰 IP Webcam 8초 | <!-- 시연 후 기록 --> |
-| T04 사람별 결과 | S02_A001 영상(뒤에 사람 1명 더) | Track ID 2개로 분리 저장 (#13, [캡처](docs/images/admin_predictions.png)) |
-| T05 비동기 | `test_create_returns_job_id_immediately` | 202 + 작업 ID 즉시 반환 (#20 처리 중, [캡처](docs/images/t05_async.png)) |
-| T06 영구 저장 | `test_task_saves_predictions`, 새로고침 | DB에 작업·예측 유지 ([이력](docs/images/history.png), [Admin](docs/images/admin_jobs.png)) |
-| T07 CRUD 권한 | `test_user_cannot_touch_others_job` | 남의 작업 조회·수정·삭제 404 ([캡처](docs/images/t07_forbidden.png)) |
-| T08 관리자 | `test_dashboard_admin_only` | 관리자만 대시보드·전체 목록 ([대시보드](docs/images/dashboard.png), [일반 회원 차단](docs/images/admin_denied.png)) |
-| T09 예외 처리 | 잘못된 파일 업로드, 꺼진 카메라 / `test_task_failure_is_saved` | FAILURE + 사용자용 사유 저장 ([캡처](docs/images/failure.png)) |
-| T10 Docker | `docker compose restart` 후 재조회 | 5개 서비스 재시작 후 Up ([캡처](docs/images/t10_restart.png)) |
+스샷을 누르면 원본 크기로 열립니다.
+
+| 번호 | 제목 | 스샷 | 기능 설명 | 확인 방법 | 기대 결과 | 결과 |
+|:---:|---|:---:|---|---|---|:---:|
+| T01 | 모델 불러오기 | <a href="docs/images/t01_health.png"><img src="docs/images/tests/t01.png" width="240" alt="T01"></a> | FastAPI가 시작할 때 6일차 RandomForest 모델과 설정 JSON을 불러오고 상태를 알려 줌 | `GET /health`<br>`test_health_model_ready` | 6개 Class, 1,140개 Feature 조건 일치 | Pass |
+| T02 | 영상 업로드 | <a href="docs/images/analysis.png"><img src="docs/images/tests/t02.png" width="240" alt="T02"></a> | MP4를 올리면 작업이 등록되고 사람별 동작 결과가 화면에 표시됨 | `S03_A006_T01.mp4` 업로드 | 작업 등록 → 결과 또는 명확한 실패 사유 | Pass |
+| T03 | IP Webcam |  | 휴대폰 IP Webcam 영상을 미리 보며 몇 초 녹화해 분석 요청 | 휴대폰 IP Webcam으로 8초 녹화 | 짧은 영상 수집·분석 요청 성공 |  |
+| T04 | 사람별 결과 | <a href="docs/images/admin_predictions.png"><img src="docs/images/tests/t04.png" width="240" alt="T04"></a> | 한 영상에서 여러 사람을 Track ID로 나눠 사람마다 결과를 저장 | `S02_A001` 영상(뒤에 사람 1명 더) | 한 작업에 Track ID별 결과 분리 (#13: 2건) | Pass |
+| T05 | 비동기 처리 | <a href="docs/images/t05_async.png"><img src="docs/images/tests/t05.png" width="240" alt="T05"></a> | 분석은 Celery Worker가 맡고 웹 서버는 기다리지 않고 바로 응답 | `test_create_returns_job_id_immediately`<br>요청 직후 화면 | 202와 작업 ID 즉시 반환, 상태 "처리 중" | Pass |
+| T06 | 영구 저장 | <a href="docs/images/history.png"><img src="docs/images/tests/t06.png" width="240" alt="T06"></a> | 작업과 사람별 예측이 PostgreSQL에 남아 새로고침해도 이력에 보임 | `test_task_saves_predictions`<br>분석 후 새로고침 | 같은 작업·예측 결과가 DB에 남아 있음 | Pass |
+| T07 | CRUD 권한 | <a href="docs/images/t07_forbidden.png"><img src="docs/images/tests/t07.png" width="240" alt="T07"></a> | 일반 회원은 본인 작업만 조회·수정·삭제할 수 있음 | `test_user_cannot_touch_others_job`<br>남의 작업 주소 직접 열기 | 다른 회원 작업은 404로 막힘 | Pass |
+| T08 | 관리자 | <a href="docs/images/dashboard.png"><img src="docs/images/tests/t08.png" width="240" alt="T08"></a> | 관리자만 전체 작업 목록과 상태별 차트를 봄 ([일반 회원 차단](docs/images/admin_denied.png)) | `test_dashboard_admin_only`<br>관리자로 `/dashboard/` | 전체 작업 목록·상태별 차트 확인 | Pass |
+| T09 | 예외 처리 | <a href="docs/images/failure.png"><img src="docs/images/tests/t09.png" width="240" alt="T09"></a> | 카메라 연결 실패나 잘못된 파일을 사용자용 문장으로 알리고 실패 상태를 저장 | `test_task_failure_is_saved`<br>`test_camera_failure_is_saved`<br>꺼진 카메라로 분석 | FAILURE와 사용자용 사유 저장 | Pass |
+| T10 | Docker | <a href="docs/images/t10_restart.png"><img src="docs/images/tests/t10.png" width="240" alt="T10"></a> | 컨테이너를 다시 켜도 PostgreSQL 데이터가 남고 서비스끼리 다시 연결됨 | `docker compose restart` 후 `ps`, 이력 재조회 | 5개 서비스 Up, 데이터 유지 | Pass |
 
 ## 8. 교재와 다르게 구현한 점과 이유
 
