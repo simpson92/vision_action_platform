@@ -323,6 +323,11 @@ Django Admin: 작업 ID·사용자·입력 방식·상태·사람별 결과, 상
 **5) 대시보드 차트가 인터넷 없는 곳에서 안 보임**
 - Chart.js를 CDN 대신 `backend/static/vendor/`에 포함(MIT 라이선스 동봉)
 
+**6) Docker에서 fastapi만 계속 재시작 (`ImportError: libxcb.so.1`)**
+- 확인한 곳: `docker compose logs fastapi` → `import cv2`에서 실패
+- 원인: `ultralytics`가 의존성으로 화면용 `opencv-python`을 설치해 `opencv-python-headless`를 덮어씀. slim 이미지에는 화면 라이브러리(libxcb·libGL)가 없음
+- 바꾼 것: `ai_service/Dockerfile`에서 두 opencv를 지우고 headless판만 다시 설치 (apt로 화면 라이브러리를 까는 것보다 이미지가 작음)
+
 ## 폴더 구조
 
 ```text

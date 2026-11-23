@@ -13,6 +13,10 @@ ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir torch==2.15.0 --index-url ${TORCH_INDEX_URL}
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+# ultralytics가 화면용 opencv-python을 같이 설치해 headless판을 덮어씀 → libxcb/libGL을 찾다 시작 실패.
+# 둘 다 지우고 headless판만 다시 설치
+RUN pip uninstall -y opencv-python opencv-python-headless \
+    && pip install --no-cache-dir opencv-python-headless==5.0.0.93
 
 COPY . .
 
