@@ -230,8 +230,92 @@
       document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
       inputType.value = tab.dataset.input;
       document.querySelectorAll(".pane").forEach((p) => (p.hidden = p.dataset.pane !== tab.dataset.input));
+      if (tab.dataset.input === "ip_webcam") startPreview();
+      else stopPreview();
     });
   });
+
+  // ---- IP Webcam 미리보기: 서버가 대신 받아 주는 사진을 짧은 간격으로 계속 바꿔 보여 줌 ----
+  // (카메라 주소는 브라우저에 노출하지 않고, 영상 스트림을 계속 붙잡지 않음)
+  const cam = document.getElementById("cam");
+  const camLive = document.getElementById("cam-live");
+  const camRecorded = document.getElementById("cam-recorded");
+  const camMsg = document.getElementById("cam-msg");
+  const camTag = document.getElementById("cam-tag");
+  const camSelect = form.querySelector("[name=camera_index]");
+  let previewOn = false;
+  let previewTimer = null;
+  let countdownTimer = null;
+
+  function camLabel(text, recording) {
+    if (!camTag) return;
+    camTag.textContent = text;
+    camTag.classList.toggle("rec", !!recording);
+  }
+  function nextFrame() {
+    if (!previewOn) return;
+    camLive.src = `/cameras/${camSelect ? camSelect.value : 0}/snapshot.jpg?t=${Date.now()}`;
+  }
+  function startPreview() {
+    if (!cam) return;
+    clearTimeout(previewTimer);
+    camRecorded.pause?.();
+    camRecorded.hidden = true;
+    camLive.hidden = false;
+    if (!countdownTimer) camLabel("미리보기");
+    camMsg.textContent = "카메라에 연결하는 중…";
+    camMsg.hidden = false;
+    previewOn = true;
+    nextFrame();
+  }
+  function stopPreview() {
+    previewOn = false;
+    clearTimeout(previewTimer);
+  }
+  if (cam) {
+    camLive.addEventListener("load", () => {
+      camMsg.hidden = true;
+      if (previewOn) previewTimer = setTimeout(nextFrame, 150);
+    });
+    camLive.addEventListener("error", () => {
+      camMsg.textContent = "카메라 화면을 받지 못했습니다. 휴대폰 IP Webcam 앱에서 Start server를 눌렀는지, 같은 Wi-Fi인지 확인해 주세요. (2초 뒤 다시 시도)";
+      camMsg.hidden = false;
+      if (previewOn) previewTimer = setTimeout(nextFrame, 2000);
+    });
+    camSelect?.addEventListener("change", startPreview);
+    camTag.addEventListener("click", () => { if (!camRecorded.hidden) startPreview(); });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopPreview();
+      else if (inputType.value === "ip_webcam" && camRecorded.hidden) startPreview();
+    });
+  }
+  // 분석 중 표시: 서버가 녹화를 시작하면(STARTED) 남은 초를 보여 주고, 끝나면 녹화된 영상을 재생
+  function updateCam(job) {
+    if (!cam || job.input_type !== "ip_webcam" || inputType.value !== "ip_webcam") return;
+    if (job.status === "STARTED" && !countdownTimer && !job.is_finished) {
+      let left = Number(cam.dataset.seconds) || 8;
+      camLabel(`녹화 중 ${left}초`, true);
+      countdownTimer = setInterval(() => {
+        left -= 1;
+        if (left > 0) camLabel(`녹화 중 ${left}초`, true);
+        else { clearInterval(countdownTimer); countdownTimer = -1; camLabel("AI 분석 중…"); }
+      }, 1000);
+    }
+    if (job.is_finished) {
+      if (countdownTimer > 0) clearInterval(countdownTimer);
+      countdownTimer = null;
+      if (job.video_url) {
+        stopPreview();
+        camLive.hidden = true;
+        camMsg.hidden = true;
+        camRecorded.src = job.video_url;
+        camRecorded.hidden = false;
+        camLabel("녹화된 영상 · 눌러서 미리보기로");
+      } else {
+        camLabel("미리보기");
+      }
+    }
+  }
 
   // ---- 업로드 미리보기 ----
   fileInput.addEventListener("change", () => {
@@ -315,6 +399,7 @@
     document.getElementById("job-metrics").hidden = true;
     document.getElementById("detail-link").href = `/analyses/${id}/`;
     setSteps("PENDING");
+    if (inputType.value === "ip_webcam") startPreview();
     document.getElementById("result-meta").textContent = `작업 #${id} 등록됨`;
     upsertHistory({ id, status: "PENDING", status_display: "대기", predictions: [], expected_action: expected });
     poll(id, 0);
@@ -351,6 +436,7 @@
 
   function render(job) {
     setSteps(job.status);
+    updateCam(job);
     document.getElementById("result-meta").textContent = `작업 #${job.id} · ${job.status_display}`;
 
     const errorBox = document.getElementById("result-error");

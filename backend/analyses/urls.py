@@ -12,5 +12,6 @@ urlpatterns = [
     path("", page_views.index, name="index"),
     path("analyses/<int:pk>/", page_views.detail, name="detail"),
     path("dashboard/", page_views.dashboard, name="dashboard"),
+    path("cameras/<int:index>/snapshot.jpg", page_views.camera_snapshot, name="camera_snapshot"),
     path("api/", include(router.urls)),
 ]

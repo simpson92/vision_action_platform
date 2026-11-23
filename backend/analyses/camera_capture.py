@@ -1,4 +1,4 @@
-"""허용된 IP Webcam에서 정해진 시간(기본 8초)만 Frame을 읽어 MP4로 저장합니다.
+"""허용된 IP Webcam에서 정해진 시간(기본 8초)만 Frame을 읽어 WebM 영상으로 저장합니다.
 
 - 주소는 사용자 입력이 아니라 .env의 IP_WEBCAM_ALLOWED_URLS 목록에서 번호로 고릅니다.
 - 수집 시간은 "입력 영상의 길이"이고, 연결·추론 시간은 별도입니다.
@@ -44,7 +44,11 @@ def capture_clip(url: str, seconds: float, output_path: Path, connect_timeout: f
 
     fps = max(len(frames) / elapsed, 1.0)
     height, width = frames[0].shape[:2]
-    writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+    # 브라우저에서 바로 재생되도록 WebM(VP8)으로 저장. (pip판 OpenCV는 H.264 인코더가 없고,
+    # mp4v(MPEG-4 Part 2)는 Chrome 등이 재생하지 못해 검은 화면이 됨)
+    writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"VP80"), fps, (width, height))
+    if not writer.isOpened():
+        raise CameraError("수집한 영상을 저장하지 못했습니다.")
     for frame in frames:
         writer.write(frame)
     writer.release()

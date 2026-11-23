@@ -176,3 +176,19 @@ class AnalysisApiTests(TestCase):
         self.assertContains(r, "AI 분석 시작")
         self.assertContains(r, "카메라 1")
         self.assertNotContains(r, "cam.local")  # 카메라 주소는 화면에 노출하지 않음
+
+    # IP Webcam 미리보기: 허용 목록 번호로만, 서버가 사진을 대신 받아 전달 (주소 비노출)
+    @mock.patch("analyses.page_views.requests.get")
+    def test_camera_snapshot_proxy(self, get):
+        get.return_value.content = b"\xff\xd8jpeg"
+        get.return_value.headers = {"Content-Type": "image/jpeg"}
+        get.return_value.raise_for_status.return_value = None
+        url = reverse("analyses:camera_snapshot", args=[0])
+        self.assertEqual(self.client.get(url).status_code, 302)  # 로그인 필요
+        self.client.force_login(self.a)
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.content, b"\xff\xd8jpeg")
+        get.assert_called_once_with("http://cam.local/shot.jpg", timeout=mock.ANY)
+        self.assertEqual(self.client.get(reverse("analyses:camera_snapshot", args=[3])).status_code, 404)
+

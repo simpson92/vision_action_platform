@@ -93,12 +93,16 @@ class AnalysisStatusSerializer(serializers.ModelSerializer):
     total_seconds = serializers.FloatField(read_only=True)
     input_type_display = serializers.CharField(source="get_input_type_display", read_only=True)
     video_name = serializers.SerializerMethodField()
+    video_url = serializers.SerializerMethodField()
 
     class Meta:
         model = AnalysisJob
         fields = ("id", "title", "status", "status_display", "is_finished", "error_message", "result_message",
-                  "input_type", "input_type_display", "video_name", "expected_action", "video_duration_sec",
+                  "input_type", "input_type_display", "video_name", "video_url", "expected_action", "video_duration_sec",
                   "video_meta", "processing_ms", "total_seconds", "created_at", "predictions")
+
+    def get_video_url(self, obj):
+        return obj.video.url if obj.video else None
 
     def get_video_name(self, obj):
         return Path(obj.video.name).name if obj.video else None

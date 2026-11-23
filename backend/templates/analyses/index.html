@@ -42,6 +42,12 @@
               {% for c in cameras %}<option value="{{ c.index }}">{{ c.name }}</option>{% endfor %}
             </select>
           </label>
+          <div class="cam" id="cam" data-seconds="{{ capture_seconds|floatformat:0 }}">
+            <img id="cam-live" alt="IP Webcam 미리보기">
+            <video id="cam-recorded" controls muted hidden></video>
+            <div class="cam-msg" id="cam-msg">카메라에 연결하는 중…</div>
+            <div class="cam-tag" id="cam-tag">미리보기</div>
+          </div>
           <p class="muted">분석 시작을 누르면 서버가 카메라에서 <b>{{ capture_seconds|floatformat:0 }}초</b> 동안 영상을 받아 분석합니다. 버튼을 누른 뒤 카메라 앞에서 동작해 주세요.</p>
         {% else %}
           <p class="error">허용된 IP Webcam이 없습니다. 관리자가 .env의 IP_WEBCAM_ALLOWED_URLS를 설정해야 합니다.</p>

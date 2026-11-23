@@ -40,7 +40,7 @@ def run_analysis(self, job_id: int) -> dict:
             cameras = settings.IP_WEBCAM_ALLOWED_URLS
             if job.camera_index is None or job.camera_index >= len(cameras):
                 raise CameraError("허용 목록에 없는 카메라입니다.")
-            relative = Path("analyses") / "ip_webcam" / f"job_{job.pk}.mp4"
+            relative = Path("analyses") / "ip_webcam" / f"job_{job.pk}.webm"
             capture_clip(cameras[job.camera_index], job.capture_seconds or settings.IP_WEBCAM_CAPTURE_SECONDS,
                          Path(settings.MEDIA_ROOT) / relative, settings.IP_WEBCAM_CONNECT_TIMEOUT)
             job.video.name = str(relative)

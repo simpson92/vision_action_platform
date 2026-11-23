@@ -181,3 +181,17 @@ td.actions { white-space: nowrap; }
 .stat span { display: block; color: var(--muted); font-size: .82rem; } .stat b { font-size: 1.6rem; }
 .stat.bad { border-left-color: var(--bad); }
 .section-head:has(.fold.closed) { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+
+/* IP Webcam 미리보기 */
+.cam { position: relative; margin: .6rem 0 .25rem; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden;
+  background: #000; aspect-ratio: 4 / 3; max-height: 300px; display: flex; align-items: center; justify-content: center; }
+.cam img, .cam video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.cam img[hidden], .cam video[hidden] { display: none; }
+.cam-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 1rem;
+  text-align: center; color: var(--muted); font-size: .9rem; }
+.cam-msg[hidden] { display: none; }
+.cam-tag { position: absolute; left: 10px; top: 10px; background: rgba(15,18,32,.75); color: var(--text); font-size: .75rem;
+  font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.cam-tag.rec { background: var(--bad); color: #fff; }
+.cam-tag.rec::before { content: "● "; }
+.cam-tag { cursor: pointer; }

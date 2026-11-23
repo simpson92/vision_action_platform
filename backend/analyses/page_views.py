@@ -3,7 +3,11 @@ from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, Q
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.cache import never_cache
+
+import requests
 
 from .models import ACTION_CHOICES, AnalysisJob, PersonPrediction
 
@@ -78,3 +82,33 @@ def dashboard(request):
         "summary": summary,
         "recent": recent,
     })
+
+
+def snapshot_url(camera_url: str) -> str | None:
+    """IP Webcam 앱의 영상 주소(.../video)에서 사진 한 장 주소(.../shot.jpg)를 만듭니다."""
+    base = camera_url.rstrip("/")
+    if base.endswith("/video"):
+        return base[: -len("/video")] + "/shot.jpg"
+    return None
+
+
+@login_required
+@never_cache
+def camera_snapshot(request, index):
+    """IP Webcam 미리보기: 허용 목록의 카메라에서 현재 사진 한 장을 받아 그대로 전달합니다.
+
+    브라우저가 카메라 주소를 직접 알 필요가 없도록 서버가 대신 가져옵니다(주소 비노출).
+    영상 스트림을 계속 붙잡지 않고 사진을 짧게 여러 번 요청하는 방식이라 웹 서버 작업자를 오래 막지 않습니다.
+    """
+    cameras = settings.IP_WEBCAM_ALLOWED_URLS
+    if not 0 <= index < len(cameras):
+        raise Http404("허용 목록에 없는 카메라입니다.")
+    url = snapshot_url(cameras[index])
+    if url is None:
+        return HttpResponse("이 카메라 주소는 미리보기를 지원하지 않습니다.", status=404, content_type="text/plain; charset=utf-8")
+    try:
+        response = requests.get(url, timeout=settings.IP_WEBCAM_CONNECT_TIMEOUT)
+        response.raise_for_status()
+    except requests.RequestException:
+        return HttpResponse("카메라에 연결하지 못했습니다.", status=502, content_type="text/plain; charset=utf-8")
+    return HttpResponse(response.content, content_type=response.headers.get("Content-Type", "image/jpeg"))
