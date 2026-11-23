@@ -6,7 +6,6 @@ from django.db.models import Avg, Count, Q
 from django.shortcuts import get_object_or_404, render
 
 from .models import ACTION_CHOICES, AnalysisJob, PersonPrediction
-from .stats import user_stats
 
 
 @login_required
@@ -19,7 +18,6 @@ def index(request):
         "actions": ACTION_CHOICES,
         "recent": recent,
         "max_upload_mb": settings.MAX_UPLOAD_MB,
-        "stats": user_stats(request.user),
         "rules": {
             "confidence": settings.CONFIDENCE_THRESHOLD,
             "margin": settings.MARGIN_THRESHOLD,

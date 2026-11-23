@@ -1,5 +1,5 @@
 // 분석 화면: 입력 방식 전환 → POST /api/analyses/ → 작업 ID로 상태를 주기적으로 조회 → 결과 표시
-// 상단 지표·그래프는 Django ORM 집계(stats)를 그리고, 분석이 끝나면 /api/analyses/stats/ 로 다시 그립니다.
+// 상단 지표·그래프는 지금 보고 있는 영상 한 건의 데이터(구간별 확률, 구간 일치율, 관절 인식)를 그립니다.
 (function () {
   const form = document.getElementById("analysis-form");
   if (!form) return;
@@ -36,92 +36,191 @@
     Chart.defaults.borderColor = C.line2;
   }
 
-  // ---- 상단 지표 + 그래프 ----
+  // ---- 지금 보고 있는 영상 한 건: 상단 지표 4개 + 그래프 2개 ----
+  // 데이터는 그 작업의 status API 응답(사람별 details: 구간별 확률, 일치율, 관절 인식)에서 바로 가져옵니다.
+  const ACTION_KEYS = Object.keys(EXPECTED);
+  const LINE_COLORS = [C.primary, C.primary2, "#60a5fa", C.warn, C.ok, "#22d3ee"];
   const charts = {};
-  function setText(key, text) {
+  let focusJob = null;
+  let focusTrack = null;
+
+  function setText(key, html) {
     const el = document.querySelector(`[data-k="${key}"]`);
-    if (el) el.innerHTML = text;
+    if (el) el.innerHTML = html;
   }
-  function spark(canvas, data, suffix) {
-    if (!hasChart) return;
-    charts[canvas.dataset.spark]?.destroy();
-    charts[canvas.dataset.spark] = new Chart(canvas, {
-      type: "line",
-      data: { labels: data.map((_, i) => i), datasets: [{ data, borderColor: C.primary, backgroundColor: C.primary + "30",
-        fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2 }] },
-      options: { responsive: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } },
-        scales: { x: { display: false }, y: { display: false, beginAtZero: true, suggestedMax: suffix === "%" ? 100 : undefined } } },
-    });
+  function setRing(key, ratio, color) {
+    const el = document.querySelector(`[data-ring="${key}"]`);
+    if (!el) return;
+    el.style.setProperty("--pct", ratio == null ? 0 : Math.max(0, Math.min(1, ratio)) * 100);
+    el.style.setProperty("--col", color || C.primary);
   }
-  function renderStats(s) {
-    setText("total", `${s.total}건`);
-    setText("total-sub", `오늘 <span class="up">+${s.today}</span>`);
-    setText("success", s.success_rate == null ? "-" : `${s.success_rate}%`);
-    setText("success-sub", `${s.success} / ${s.finished} 완료`);
-    setText("decided", s.decided_rate == null ? "-" : `${s.decided_rate}%`);
-    setText("decided-sub", s.labelled
-      ? `실제 동작 일치 ${s.matched}/${s.labelled}`
-      : `판단 보류 ${s.undecided}건`);
-    setText("seconds", s.avg_seconds == null ? "-" : `${Number(s.avg_seconds).toFixed(1)}초`);
-    setText("seconds-sub", s.last_seconds == null ? "성공한 분석 기준" : `최근 ${Number(s.last_seconds).toFixed(1)}초`);
-    document.querySelectorAll("canvas.spark").forEach((c) => {
-      const key = c.dataset.spark;
-      spark(c, s.spark[key] || [], key === "success" || key === "decided" ? "%" : "");
-    });
-
-    // 최근 Confidence 추이: 1등 확률 + 확정 기준선 + 무작위 기준선
-    const trendCanvas = document.getElementById("trendChart");
-    const distCanvas = document.getElementById("distChart");
-    toggleEmpty(trendCanvas, !s.trend.length, "완료된 분석이 생기면 표시됩니다.");
-    toggleEmpty(distCanvas, !s.predictions, "예측 결과가 생기면 표시됩니다.");
-    document.getElementById("dist-sub").textContent = `사람별 예측 ${s.predictions}건`;
-    if (!hasChart) return;
-
-    const flat = (y) => s.trend.map(() => y * 100);
-    charts.trend?.destroy();
-    charts.trend = new Chart(trendCanvas, {
-      data: { labels: s.trend.map((t) => t.label), datasets: [
-        { type: "line", label: "1등 확률", data: s.trend.map((t) => +(t.confidence * 100).toFixed(1)), borderColor: C.primary,
-          backgroundColor: C.primary + "26", fill: true, tension: 0.3, borderWidth: 2.5, pointRadius: 4,
-          pointBackgroundColor: s.trend.map((t) => (t.decided ? C.primary : C.warn)) },
-        { type: "line", label: "확정 기준", data: flat(RULES.confidence), borderColor: C.warn, borderDash: [2, 3], borderWidth: 1.5, pointRadius: 0 },
-        { type: "line", label: "무작위", data: flat(RULES.chance), borderColor: C.muted, borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0 },
-      ] },
-      options: { maintainAspectRatio: false, animation: false, plugins: { legend: { display: false },
-          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} ${ctx.parsed.y}%` } } },
-        scales: { y: { min: 0, suggestedMax: 40, ticks: { callback: (v) => `${v}%` } }, x: { grid: { display: false } } } },
-    });
-
-    const palette = [C.primary, C.primary2, C.ok, C.warn, "#60a5fa", "#22d3ee", C.muted + "99"]; // 6개 동작 + 판단 보류
-    const d = s.distribution;
-    const keep = d.values.map((v, i) => i).filter((i) => d.values[i] > 0);
-    charts.dist?.destroy();
-    charts.dist = new Chart(distCanvas, {
-      type: "doughnut",
-      data: { labels: keep.map((i) => d.labels[i]), datasets: [{ data: keep.map((i) => d.values[i]),
-        backgroundColor: keep.map((i) => palette[i]), borderColor: C.card, borderWidth: 2 }] },
-      options: { maintainAspectRatio: false, animation: false, cutout: "58%",
-        plugins: { legend: { position: "right", labels: { color: C.text, boxWidth: 12 } } } },
-    });
-  }
-  function toggleEmpty(canvas, empty, text) {
+  function chartEmpty(canvas, text) {
     let note = canvas.parentElement.querySelector(".chart-empty");
-    if (empty && !note) {
+    if (!note) {
       note = document.createElement("div");
       note.className = "chart-empty";
-      note.textContent = text;
       canvas.parentElement.appendChild(note);
     }
-    if (note) note.hidden = !empty;
-    canvas.style.visibility = empty ? "hidden" : "visible";
+    note.textContent = text || "";
+    note.hidden = !text;
+    canvas.style.visibility = text ? "hidden" : "visible";
   }
-  async function refreshStats() {
+
+  function showFocus(job, trackId) {
+    focusJob = job;
+    const people = (job.predictions || []).filter((p) => p.action_label !== "INSUFFICIENT_INPUT");
+    const person = people.find((p) => p.track_id === trackId) || people[0] || (job.predictions || [])[0];
+    focusTrack = person ? person.track_id : null;
+    document.querySelectorAll("#history tr[data-id]").forEach((tr) => tr.classList.toggle("selected", Number(tr.dataset.id) === job.id));
+    document.querySelectorAll("#people .person").forEach((el) => el.classList.toggle("selected", Number(el.dataset.track) === focusTrack));
+
+    const name = job.title || job.video_name || job.input_type_display || "";
+    const who = person && (job.predictions || []).length > 1 ? ` · 사람 #${person.track_id} (카드를 눌러 바꾸기)` : "";
+    document.getElementById("focus-text").innerHTML =
+      `지금 보고 있는 분석: <b>#${job.id}</b> ${escapeHtml(name)}${who}`;
+
+    const d = (person && person.details) || {};
+    const meta = job.video_meta || {};
+    if (!person || job.status !== "SUCCESS") {
+      ["conf", "margin", "agree", "pose"].forEach((k) => { setText(k, "-"); setRing(k, 0); });
+      setText("conf-sub", job.status === "FAILURE" ? "분석 실패" : "결과 없음");
+      drawTimeline(null);
+      drawCompare(null);
+      return;
+    }
+    const decided = isDecided(person.action_label);
+    setText("conf", pct(person.confidence));
+    setText("conf-sub", `무작위 ${pct(RULES.chance)}의 <b>${(person.confidence / RULES.chance).toFixed(1)}배</b>`);
+    setRing("conf", person.confidence / 0.5, decided ? C.primary : C.warn);
+
+    const marginOk = person.margin >= RULES.margin;
+    setText("margin", `${(person.margin * 100).toFixed(1)}%p`);
+    setText("margin-sub", `확정 기준 ${(RULES.margin * 100).toFixed(0)}%p ${marginOk ? '<span class="up">✓ 넘음</span>' : '<span class="down">✗ 못 넘음</span>'}`);
+    setRing("margin", person.margin / 0.2, marginOk ? C.ok : C.bad);
+
+    if (d.window_agreement != null) {
+      const total = person.window_count || (d.timeline || []).length;
+      const same = Math.round(d.window_agreement * total);
+      setText("agree", `${Math.round(d.window_agreement * 100)}%`);
+      setText("agree-sub", `${total}개 구간 중 ${same}개가 1등 동작과 같음`);
+      setRing("agree", d.window_agreement, d.window_agreement >= 0.5 ? C.ok : C.warn);
+    } else {
+      setText("agree", "-");
+      setText("agree-sub", "이전 분석이라 구간 데이터 없음");
+      setRing("agree", 0);
+    }
+
+    if (d.mean_keypoint_conf != null) {
+      const detected = meta.frame_count ? d.detected_frames / meta.frame_count : null;
+      setText("pose", d.mean_keypoint_conf.toFixed(2));
+      const parts = [];
+      if (detected != null) parts.push(`사람 검출 ${Math.round(Math.min(detected, 1) * 100)}%`);
+      parts.push(`관절 보간 ${d.interpolated_joints || 0}개`);
+      setText("pose-sub", parts.join(" · "));
+      setRing("pose", d.mean_keypoint_conf, person.input_quality === "good" ? C.ok : person.input_quality === "fair" ? C.warn : C.bad);
+    } else {
+      setText("pose", QUALITY[person.input_quality] || "-");
+      setText("pose-sub", `Frame ${person.valid_frames}개`);
+      setRing("pose", person.input_quality === "good" ? 0.9 : person.input_quality === "fair" ? 0.6 : 0.3);
+    }
+    drawTimeline(person);
+    drawCompare(person);
+  }
+
+  function drawTimeline(person) {
+    const canvas = document.getElementById("timelineChart");
+    const timeline = (person && person.details && person.details.timeline) || [];
+    charts.timeline?.destroy();
+    document.getElementById("timeline-sub").textContent = "2초 구간을 0.5초씩 옮기며 예측";
+    if (!person) return chartEmpty(canvas, "분석 결과가 생기면 표시됩니다.");
+    if (!timeline.length) return chartEmpty(canvas, "이 분석에는 구간 데이터가 없습니다. 새로 분석하면 표시됩니다.");
+    chartEmpty(canvas, "");
+    document.getElementById("timeline-sub").textContent =
+      timeline.length > 1 ? `2초 구간 ${timeline.length}개 (0.5초씩 이동)` : "영상이 짧아 전체를 한 구간으로 예측";
+    const top = person.raw_label;
+    const order = [top, ...ACTION_KEYS.filter((k) => k !== top)];
+    if (!hasChart) return;
+    charts.timeline = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: timeline.map((w) => `${w.start_sec.toFixed(1)}~${w.end_sec.toFixed(1)}초`),
+        datasets: [
+          ...order.map((key) => {
+            const color = LINE_COLORS[ACTION_KEYS.indexOf(key)];
+            const main = key === top;
+            return { label: LABELS[key], data: timeline.map((w) => +((w.probabilities[key] || 0) * 100).toFixed(1)),
+              borderColor: color, backgroundColor: main ? color + "22" : color, fill: main, tension: 0.3,
+              borderWidth: main ? 3 : 1.5, pointRadius: main ? 4 : 2, order: main ? 0 : 1 };
+          }),
+          { label: `확정 기준 ${pct(RULES.confidence, 0)}`, data: timeline.map(() => RULES.confidence * 100), borderColor: C.muted,
+            borderDash: [4, 4], borderWidth: 1.2, pointRadius: 0, fill: false },
+        ],
+      },
+      options: { maintainAspectRatio: false, animation: false, interaction: { mode: "index", intersect: false },
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, color: C.text, font: { size: 11 } } },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} ${ctx.parsed.y}%` } } },
+        scales: { y: { min: 0, suggestedMax: 50, ticks: { callback: (v) => `${v}%` } }, x: { grid: { display: false } } } },
+    });
+  }
+
+  function drawCompare(person) {
+    const canvas = document.getElementById("compareChart");
+    const d = (person && person.details) || {};
+    charts.compare?.destroy();
+    if (!person) return chartEmpty(canvas, "분석 결과가 생기면 표시됩니다.");
+    if (!d.whole_probabilities) return chartEmpty(canvas, "이 분석에는 비교 데이터가 없습니다. 새로 분석하면 표시됩니다.");
+    chartEmpty(canvas, "");
+    if (!hasChart) return;
+    const keys = [...ACTION_KEYS].sort((a, b) => (person.probabilities[b] || 0) - (person.probabilities[a] || 0));
+    const row = (src) => keys.map((k) => +(((src || {})[k] || 0) * 100).toFixed(1));
+    charts.compare = new Chart(canvas, {
+      type: "bar",
+      data: { labels: keys.map((k) => LABELS[k]), datasets: [
+        { label: "전체 구간(학습과 같은 방식)", data: row(d.whole_probabilities), backgroundColor: C.primary2, borderRadius: 3 },
+        { label: "2초 구간 평균", data: row(d.window_mean_probabilities), backgroundColor: "#60a5fa", borderRadius: 3 },
+        { label: "최종", data: row(person.probabilities), backgroundColor: C.primary, borderRadius: 3 },
+      ] },
+      options: { indexAxis: "y", maintainAspectRatio: false, animation: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, color: C.text, font: { size: 11 } } },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} ${ctx.parsed.x}%` } } },
+        scales: { x: { min: 0, suggestedMax: 40, ticks: { callback: (v) => `${v}%` } }, y: { grid: { display: false }, ticks: { color: C.text } } } },
+    });
+  }
+
+  // 이력 행을 누르면 그 작업을 위 결과 카드·지표·그래프에 표시
+  async function loadJob(id) {
     try {
-      const res = await fetch("/api/analyses/stats/", { credentials: "same-origin" });
-      if (res.ok) renderStats(await res.json());
-    } catch (_) { /* 지표 갱신 실패는 분석 결과에 영향 없음 */ }
+      const res = await fetch(`/api/analyses/${id}/status/`, { credentials: "same-origin" });
+      if (!res.ok) return;
+      const job = await res.json();
+      clearTimeout(timer);
+      document.getElementById("result-empty").hidden = true;
+      document.getElementById("result-body").hidden = false;
+      document.getElementById("result-error").hidden = true;
+      document.getElementById("detail-link").href = `/analyses/${id}/`;
+      render(job);
+      if (!job.is_finished) poll(id, 0);
+    } catch (_) { /* 무시: 다음 클릭에서 다시 시도 */ }
   }
-  renderStats(readJson("stats-data"));
+  document.getElementById("people").addEventListener("click", (event) => {
+    const card = event.target.closest(".person");
+    if (card && focusJob) showFocus(focusJob, Number(card.dataset.track));
+  });
+
+  // ---- 최근 분석 이력 접기/펴기 (브라우저에 상태 기억) ----
+  const foldBtn = document.getElementById("fold-history");
+  const historyWrap = document.getElementById("history-body");
+  function setFold(open) {
+    historyWrap.hidden = !open;
+    foldBtn.setAttribute("aria-expanded", String(open));
+    foldBtn.classList.toggle("closed", !open);
+    try { localStorage.setItem("historyOpen", open ? "1" : "0"); } catch (_) { /* 저장 못 해도 동작 */ }
+  }
+  foldBtn.addEventListener("click", () => setFold(historyWrap.hidden));
+  try { if (localStorage.getItem("historyOpen") === "0") setFold(false); } catch (_) { /* 기본: 펼침 */ }
+  function updateCount() {
+    document.getElementById("history-count").textContent = document.querySelectorAll("#history tr[data-id]").length;
+  }
 
   // ---- 입력 방식 탭 ----
   document.querySelectorAll(".tab").forEach((tab) => {
@@ -226,7 +325,7 @@
       const job = await res.json();
       render(job);
       upsertHistory(job);
-      if (job.is_finished) return refreshStats();
+      if (job.is_finished) return;
     } catch (err) {
       document.getElementById("result-meta").textContent = `상태 조회 실패, 다시 시도 중… (${err.message})`;
     }
@@ -269,12 +368,13 @@
     const people = document.getElementById("people");
     if (job.status === "SUCCESS" && !job.predictions.length) {
       people.innerHTML = `<p class="muted">${escapeHtml(job.result_message || "영상에서 사람을 찾지 못했습니다.")}</p>`;
-      return;
+    } else {
+      people.innerHTML = job.predictions.map((p) => personCard(p, job.expected_action, job.predictions.length > 1)).join("");
     }
-    people.innerHTML = job.predictions.map((p) => personCard(p, job.expected_action)).join("");
+    if (job.is_finished) showFocus(job, focusJob && focusJob.id === job.id ? focusTrack : null);
   }
 
-  function personCard(p, expected) {
+  function personCard(p, expected, many) {
     const decided = isDecided(p.action_label);
     const probs = Object.entries(p.probabilities || {}).sort((a, b) => b[1] - a[1]);
     const scale = Math.max(0.4, probs.length ? probs[0][1] : 0); // 막대 오른쪽 끝 = 40% (넘으면 1등 기준)
@@ -299,7 +399,7 @@
     const hint = !decided && p.raw_label ? `<div class="muted">가장 가까운 동작: ${LABELS[p.raw_label] || p.raw_label}</div>` : "";
 
     return `
-      <article class="person ${decided ? "" : "uncertain"}">
+      <article class="person ${decided ? "" : "uncertain"}${many ? " clickable" : ""}" data-track="${p.track_id}">
         <div class="top">
           <div class="gauge" style="--pct:${(p.confidence * 100).toFixed(1)}">
             <div class="c"><b>${pct(p.confidence, 0)}</b><span>무작위 ${pct(RULES.chance)}의</span><em>${ratio.toFixed(1)}배</em></div>
@@ -341,13 +441,16 @@
       row = document.createElement("tr");
       row.dataset.id = job.id;
       row.dataset.expected = job.expected_action || "";
+      row.className = "pick";
       const now = new Date();
       const two = (n) => String(n).padStart(2, "0");
       row.innerHTML = `<td>${job.id}</td><td>${two(now.getMonth() + 1)}/${two(now.getDate())} ${two(now.getHours())}:${two(now.getMinutes())}</td>
         <td>${inputType.value === "upload" ? "영상 업로드" : "IP Webcam"}</td><td></td><td></td><td><span class="muted">-</span></td><td></td>
         <td class="actions"><a href="/analyses/${job.id}/">상세</a> <button type="button" class="link danger del-job">삭제</button></td>`;
       tbody.prepend(row);
+      updateCount();
     }
+    row.dataset.status = job.status;
     const cells = row.children;
     cells[3].innerHTML = `<span class="badge s-${job.status}">${job.status_display}</span>`;
     if (job.predictions && job.predictions.length) {
@@ -372,7 +475,11 @@
   }
   historyBody?.addEventListener("click", async (event) => {
     const btn = event.target.closest(".del-job");
-    if (!btn) return;
+    if (!btn) {
+      const tr = event.target.closest("tr[data-id]");
+      if (tr && !event.target.closest("a")) loadJob(Number(tr.dataset.id));
+      return;
+    }
     const row = btn.closest("tr");
     if (!confirm(`분석 #${row.dataset.id} 기록과 영상을 삭제할까요?`)) return;
     btn.disabled = true;
@@ -382,7 +489,7 @@
     if (res.ok || res.status === 404) {
       row.remove();
       showEmptyIfNeeded();
-      refreshStats();
+      updateCount();
     } else {
       const body = await res.json().catch(() => ({}));
       alert(flattenErrors(body) || `삭제 실패 (HTTP ${res.status})`);
@@ -398,8 +505,17 @@
     const body = await res.json();
     body.deleted_ids.forEach((id) => historyBody.querySelector(`tr[data-id="${id}"]`)?.remove());
     showEmptyIfNeeded();
-    refreshStats();
+    updateCount();
   });
+
+  // 처음 열면 가장 최근에 완료된 분석을 위에 보여 줌
+  const firstDone = document.querySelector('#history tr[data-status="SUCCESS"]');
+  if (firstDone) loadJob(Number(firstDone.dataset.id));
+  else showFocusEmpty();
+  function showFocusEmpty() {
+    drawTimeline(null);
+    drawCompare(null);
+  }
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

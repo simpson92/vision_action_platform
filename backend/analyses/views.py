@@ -11,7 +11,6 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from .models import AnalysisJob
-from .stats import user_stats
 from .serializers import AnalysisJobSerializer, AnalysisJobUpdateSerializer, AnalysisStatusSerializer
 from .tasks import run_analysis
 
@@ -77,11 +76,6 @@ class AnalysisJobViewSet(
         instance.delete()
         if video:
             video.delete(save=False)
-
-    @action(detail=False, methods=["get"])
-    def stats(self, request):
-        """분석 화면 상단 지표·그래프용 본인 작업 집계."""
-        return Response(user_stats(request.user))
 
     @action(detail=True, methods=["get"])
     def status(self, request, pk=None):

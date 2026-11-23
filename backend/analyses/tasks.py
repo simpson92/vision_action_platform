@@ -13,6 +13,9 @@ from .services import AIServiceError, AIServiceUnavailable, predict_video
 
 logger = logging.getLogger(__name__)
 
+DETAIL_KEYS = ("timeline", "whole_probabilities", "window_mean_probabilities", "window_agreement",
+               "detected_frames", "interpolated_joints", "mean_keypoint_conf")
+
 
 def _fail(job_id: int, message: str) -> None:
     AnalysisJob.objects.filter(pk=job_id).update(
@@ -76,6 +79,7 @@ def run_analysis(self, job_id: int) -> dict:
                 confidence=p.get("confidence", 0.0),
                 margin=p.get("margin", 0.0),
                 probabilities=p.get("probabilities", {}),
+                details={key: p[key] for key in DETAIL_KEYS if key in p},
                 window_count=p.get("window_count", 0),
                 valid_frames=p.get("valid_frames", 0),
                 input_quality=p.get("input_quality", ""),
@@ -88,7 +92,9 @@ def run_analysis(self, job_id: int) -> dict:
         job.result_message = (result.get("message") or "")[:255]
         job.error_message = ""
         job.processing_ms = result.get("processing_ms")
-        job.video_duration_sec = (result.get("video") or {}).get("duration_sec")
+        video = result.get("video") or {}
+        job.video_duration_sec = video.get("duration_sec")
+        job.video_meta = {key: video[key] for key in ("fps", "frame_count", "width", "height") if key in video}
         job.completed_at = timezone.now()
         job.save()
     return {"job_id": job_id, "status": "SUCCESS", "people": len(result.get("predictions", []))}

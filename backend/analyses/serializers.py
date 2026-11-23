@@ -19,7 +19,7 @@ class PersonPredictionSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonPrediction
         fields = ("track_id", "action_label", "action_display", "raw_label", "confidence", "margin",
-                  "probabilities", "window_count", "valid_frames", "input_quality", "start_sec", "end_sec")
+                  "probabilities", "details", "window_count", "valid_frames", "input_quality", "start_sec", "end_sec")
         read_only_fields = fields
 
 
@@ -35,9 +35,9 @@ class AnalysisJobSerializer(serializers.ModelSerializer):
         model = AnalysisJob
         fields = ("id", "username", "title", "memo", "input_type", "input_type_display", "video", "video_url",
                   "camera_index", "capture_seconds", "expected_action", "status", "status_display",
-                  "celery_task_id", "error_message", "result_message", "video_duration_sec", "processing_ms",
+                  "celery_task_id", "error_message", "result_message", "video_duration_sec", "video_meta", "processing_ms",
                   "total_seconds", "created_at", "started_at", "completed_at", "predictions")
-        read_only_fields = ("status", "celery_task_id", "error_message", "result_message", "video_duration_sec",
+        read_only_fields = ("status", "celery_task_id", "error_message", "result_message", "video_duration_sec", "video_meta",
                             "processing_ms", "created_at", "started_at", "completed_at", "capture_seconds")
         extra_kwargs = {"video": {"write_only": True, "required": False}}
 
@@ -91,8 +91,14 @@ class AnalysisStatusSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     is_finished = serializers.BooleanField(read_only=True)
     total_seconds = serializers.FloatField(read_only=True)
+    input_type_display = serializers.CharField(source="get_input_type_display", read_only=True)
+    video_name = serializers.SerializerMethodField()
 
     class Meta:
         model = AnalysisJob
-        fields = ("id", "status", "status_display", "is_finished", "error_message", "result_message",
-                  "expected_action", "video_duration_sec", "processing_ms", "total_seconds", "predictions")
+        fields = ("id", "title", "status", "status_display", "is_finished", "error_message", "result_message",
+                  "input_type", "input_type_display", "video_name", "expected_action", "video_duration_sec",
+                  "video_meta", "processing_ms", "total_seconds", "created_at", "predictions")
+
+    def get_video_name(self, obj):
+        return Path(obj.video.name).name if obj.video else None

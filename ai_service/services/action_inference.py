@@ -77,6 +77,7 @@ def predict_person(
         "detected_frames": int(person.detected_frames),
         "interpolated_joints": int(person.interpolated_joints),
         "input_quality": _input_quality(person, frame_count),
+        "mean_keypoint_conf": round(float(person.mean_keypoint_conf), 3),
     }
     if len(person.frame_ids) < options.min_valid_frames:
         return {
@@ -104,7 +105,8 @@ def predict_person(
     # ① 학습과 같은 방식: 사람이 보인 구간 전체를 30 Step으로
     whole = flat(0, len(person.frame_ids))
     # ② 짧은 Window 여러 개 (구간이 짧으면 ①과 같은 1개)
-    window_rows = [flat(a, b) for a, b in _windows(person.frame_ids, fps, options)]
+    spans = _windows(person.frame_ids, fps, options)
+    window_rows = [flat(a, b) for a, b in spans]
     matrix = np.stack([whole, *window_rows])
     if matrix.shape[1] != bundle.feature_count:
         raise RuntimeError(f"입력 Feature 수 {matrix.shape[1]} != 모델 {bundle.feature_count}")
@@ -119,6 +121,17 @@ def predict_person(
     margin = float(confidence - np.sort(mean_probs)[-2])
     decided = confidence >= options.confidence_threshold and margin >= options.margin_threshold
     agreement = float((window_probs.argmax(axis=1) == best).mean())
+    as_dict = lambda row: {c: round(float(p), 4) for c, p in zip(bundle.classes, row)}  # noqa: E731
+    # 화면 그래프용: 영상 구간(Window)마다 확률이 어떻게 바뀌었는지
+    timeline = [
+        {
+            "start_sec": round(float(person.frame_ids[a]) / fps, 2),
+            "end_sec": round(float(person.frame_ids[b - 1]) / fps, 2),
+            "label": bundle.classes[int(np.argmax(row))],
+            "probabilities": as_dict(row),
+        }
+        for (a, b), row in zip(spans, window_probs)
+    ]
 
     return {
         **base,
@@ -129,6 +142,9 @@ def predict_person(
         "probabilities": {c: round(float(p), 4) for c, p in zip(bundle.classes, mean_probs)},
         "window_count": int(len(window_rows)),
         "window_agreement": round(agreement, 3),
+        "whole_probabilities": as_dict(probs[0]),
+        "window_mean_probabilities": as_dict(window_probs.mean(axis=0)),
+        "timeline": timeline,
         "start_sec": round(float(person.frame_ids[0]) / fps, 2),
         "end_sec": round(float(person.frame_ids[-1]) / fps, 2),
         "message": None if decided else "1등 동작의 확률이 낮거나 2등과 차이가 작아 판단을 보류합니다.",

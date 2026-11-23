@@ -44,6 +44,8 @@ class AnalysisJob(models.Model):
     error_message = models.TextField("오류 메시지", blank=True)
     result_message = models.CharField("결과 메시지", max_length=255, blank=True)
     video_duration_sec = models.FloatField(null=True, blank=True)
+    # FastAPI가 돌려준 영상 정보(fps, frame_count, width, height)
+    video_meta = models.JSONField("영상 정보", default=dict, blank=True)
     processing_ms = models.PositiveIntegerField("AI 처리 시간(ms)", null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -98,6 +100,9 @@ class PersonPrediction(models.Model):
     confidence = models.FloatField()
     margin = models.FloatField(default=0)
     probabilities = models.JSONField(default=dict, blank=True)
+    # 영상별 판단 근거(화면 그래프용): Window별 확률(timeline), 전체 구간/Window 평균 확률,
+    # Window 일치율, 사람 검출 Frame 수, 보간한 관절 수, 평균 관절 Confidence
+    details = models.JSONField("판단 근거", default=dict, blank=True)
     window_count = models.PositiveIntegerField(default=0)
     valid_frames = models.PositiveIntegerField(default=0)
     input_quality = models.CharField(max_length=10, blank=True)

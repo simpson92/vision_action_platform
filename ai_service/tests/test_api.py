@@ -71,3 +71,8 @@ def test_real_video_top1(client, name, expected):
     assert body["status"] == "ok"
     main = max(body["predictions"], key=lambda p: p["valid_frames"])
     assert main["action_label"] == expected
+    # 화면 그래프용 구간별 확률: Window 수와 같고 시간 순서
+    assert len(main["timeline"]) == main["window_count"]
+    starts = [w["start_sec"] for w in main["timeline"]]
+    assert starts == sorted(starts)
+    assert set(main["whole_probabilities"]) == set(main["probabilities"])

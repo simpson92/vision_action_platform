@@ -14,6 +14,13 @@ class HealthResponse(BaseModel):
     error: str | None = None
 
 
+class WindowPrediction(BaseModel):
+    start_sec: float
+    end_sec: float
+    label: str
+    probabilities: dict[str, float]
+
+
 class PersonPrediction(BaseModel):
     track_id: int = Field(description="한 영상 안의 추적 번호. 영구적인 사람 ID가 아님")
     action_label: str = Field(description="6개 동작 중 하나, 또는 UNCERTAIN / INSUFFICIENT_INPUT")
@@ -27,6 +34,10 @@ class PersonPrediction(BaseModel):
     detected_frames: int
     interpolated_joints: int
     input_quality: str = Field(examples=["good", "fair", "poor"])
+    mean_keypoint_conf: float = Field(0.0, description="사람 관절 17개의 평균 인식 Confidence")
+    whole_probabilities: dict[str, float] = Field(default_factory=dict, description="학습과 같은 전체 구간 30 Step 예측")
+    window_mean_probabilities: dict[str, float] = Field(default_factory=dict, description="2초 Window 예측 평균")
+    timeline: list[WindowPrediction] = Field(default_factory=list, description="Window별 시간 구간과 확률")
     start_sec: float | None = None
     end_sec: float | None = None
     message: str | None = None

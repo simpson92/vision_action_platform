@@ -19,10 +19,12 @@ MEDIA = tempfile.mkdtemp()
 
 FAKE_RESULT = {
     "status": "ok", "message": None, "processing_ms": 1234,
-    "video": {"duration_sec": 2.5},
+    "video": {"duration_sec": 2.5, "fps": 25.0, "frame_count": 62, "width": 640, "height": 480},
     "predictions": [
         {"track_id": 1, "action_label": "bend_return", "raw_label": "bend_return", "confidence": 0.28, "margin": 0.07,
          "probabilities": {"bend_return": 0.28}, "window_count": 3, "valid_frames": 62, "input_quality": "good",
+         "window_agreement": 0.67, "detected_frames": 60, "interpolated_joints": 4, "mean_keypoint_conf": 0.81,
+         "timeline": [{"start_sec": 0.0, "end_sec": 2.0, "label": "bend_return", "probabilities": {"bend_return": 0.3}}],
          "start_sec": 0.0, "end_sec": 2.4},
         {"track_id": 2, "action_label": "UNCERTAIN", "raw_label": "wave", "confidence": 0.22, "margin": 0.01,
          "probabilities": {"wave": 0.22}, "window_count": 3, "valid_frames": 40, "input_quality": "fair"},
@@ -89,6 +91,12 @@ class AnalysisApiTests(TestCase):
         body = self.client.get(f"/api/analyses/{job.pk}/status/").json()
         self.assertTrue(body["is_finished"])
         self.assertEqual([p["track_id"] for p in body["predictions"]], [1, 2])
+        # 영상별 판단 근거(그래프용)도 저장·응답
+        self.assertEqual(body["video_meta"]["frame_count"], 62)
+        details = body["predictions"][0]["details"]
+        self.assertEqual(details["window_agreement"], 0.67)
+        self.assertEqual(details["timeline"][0]["label"], "bend_return")
+        self.assertEqual(body["predictions"][1]["details"], {})
 
     # T09: 잘못된 파일 → 실패 상태와 사유 저장
     @mock.patch("analyses.tasks.predict_video", side_effect=AIServiceError("영상을 열 수 없습니다."))
@@ -168,19 +176,3 @@ class AnalysisApiTests(TestCase):
         self.assertContains(r, "AI 분석 시작")
         self.assertContains(r, "카메라 1")
         self.assertNotContains(r, "cam.local")  # 카메라 주소는 화면에 노출하지 않음
-
-    # 분석 화면 상단 지표·그래프: 본인 작업만 집계
-    @mock.patch("analyses.tasks.predict_video", return_value=FAKE_RESULT)
-    def test_stats_counts_only_my_jobs(self, _):
-        run_analysis.apply(args=[self.create_job(self.a, expected_action="bend_return").pk])
-        run_analysis.apply(args=[self.create_job(self.b).pk])
-        self.client.force_login(self.a)
-        s = self.client.get("/api/analyses/stats/").json()
-        self.assertEqual((s["total"], s["success"], s["predictions"], s["undecided"]), (1, 1, 2, 1))
-        self.assertEqual(s["decided_rate"], 50)
-        self.assertEqual((s["matched"], s["labelled"]), (1, 1))
-        self.assertEqual(s["trend"][0]["confidence"], 0.28)
-        self.assertEqual(s["distribution"]["values"][0], 1)  # bend_return
-        r = self.client.get(reverse("analyses:index"))
-        self.assertContains(r, "✓ 일치")
-        self.assertContains(r, 'id="stats-data"')
