@@ -1,0 +1,11 @@
+# 원본(KH_Project_Subject1010/.venv, Python 3.12.16)에서 확인한 버전과 맞춤
+# Docker 이미지: python:3.12-slim 사용
+--extra-index-url https://download.pytorch.org/whl/cpu
+scikit-learn==1.9.1
+numpy==2.5.4
+pandas==3.1.1
+joblib==1.6.0
+opencv-python-headless==5.0.0.93
+ultralytics==8.4.203
+torch==2.15.0
+# TODO: fastapi, uvicorn, python-multipart, pydantic
