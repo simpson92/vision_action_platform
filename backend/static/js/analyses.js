@@ -36,6 +36,29 @@
     preview.hidden = false;
   });
 
+  // ---- 끌어다 놓기: 놓은 파일을 file input에 넣고 change 이벤트로 미리보기 재사용 ----
+  const drop = document.getElementById("drop");
+  ["dragenter", "dragover"].forEach((name) =>
+    drop.addEventListener(name, (event) => {
+      event.preventDefault();
+      drop.classList.add("dragging");
+    })
+  );
+  ["dragleave", "drop"].forEach((name) =>
+    drop.addEventListener(name, (event) => {
+      event.preventDefault();
+      drop.classList.remove("dragging");
+    })
+  );
+  drop.addEventListener("drop", (event) => {
+    const files = event.dataTransfer.files;
+    if (!files.length) return;
+    fileInput.files = files;
+    fileInput.dispatchEvent(new Event("change"));
+  });
+  // 칸 밖에 잘못 놓아도 브라우저가 영상을 새 탭으로 열지 않게 막음
+  ["dragover", "drop"].forEach((name) => window.addEventListener(name, (event) => event.preventDefault()));
+
   // ---- 분석 시작 ----
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
