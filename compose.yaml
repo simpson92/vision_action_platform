@@ -1,0 +1,4 @@
+# 5개 서비스: django · fastapi · celery · redis · postgres
+# 서비스 간 통신은 localhost가 아니라 서비스 이름(예: http://fastapi:8000, redis://redis:6379/0) 사용
+# TODO: 직접 작성
+services: {}

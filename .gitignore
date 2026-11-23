@@ -1,0 +1,35 @@
+# 환경변수·비밀정보
+.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Django 실행 중 생성물
+backend/media/
+backend/staticfiles/
+db.sqlite3
+
+# 영상·대용량 파일
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# YOLO Pose 가중치 (ultralytics가 자동 다운로드)
+*.pt
+
+# 모델 파일: rf_action_baseline.joblib(약 365KB)은 저장소에 포함
+# 포함하지 않으려면 아래 줄의 주석을 해제하고 README에 배치 방법 기록
+# ai_service/models/*.joblib
+
+# OS·에디터
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
