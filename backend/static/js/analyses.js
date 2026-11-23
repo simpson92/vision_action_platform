@@ -189,7 +189,7 @@
       row.dataset.id = job.id;
       const now = new Date();
       row.innerHTML = `<td>${job.id}</td><td>${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}</td>
-        <td>${inputType.value === "upload" ? "영상 업로드" : "IP Webcam"}</td><td class="st"></td><td class="res"></td><td><a href="/analyses/${job.id}/">상세</a></td>`;
+        <td>${inputType.value === "upload" ? "영상 업로드" : "IP Webcam"}</td><td class="st"></td><td class="res"></td><td class="actions"><a href="/analyses/${job.id}/">상세</a> <button type="button" class="link danger del-job">삭제</button></td>`;
       tbody.prepend(row);
     }
     const st = row.children[3];
@@ -203,6 +203,42 @@
       res.textContent = job.result_message || "-";
     }
   }
+
+  // ---- 이력 삭제 (한 건 / 전체) ----
+  const historyBody = document.querySelector("#history tbody");
+  function showEmptyIfNeeded() {
+    if (historyBody && !historyBody.querySelector("tr[data-id]")) {
+      historyBody.innerHTML = '<tr class="empty"><td colspan="6" class="muted">아직 분석 기록이 없습니다.</td></tr>';
+    }
+  }
+  historyBody?.addEventListener("click", async (event) => {
+    const btn = event.target.closest(".del-job");
+    if (!btn) return;
+    const row = btn.closest("tr");
+    if (!confirm(`분석 #${row.dataset.id} 기록과 영상을 삭제할까요?`)) return;
+    btn.disabled = true;
+    const res = await fetch(`/api/analyses/${row.dataset.id}/`, {
+      method: "DELETE", credentials: "same-origin", headers: { "X-CSRFToken": csrf },
+    });
+    if (res.ok || res.status === 404) {
+      row.remove();
+      showEmptyIfNeeded();
+    } else {
+      const body = await res.json().catch(() => ({}));
+      alert(flattenErrors(body) || `삭제 실패 (HTTP ${res.status})`);
+      btn.disabled = false;
+    }
+  });
+  document.getElementById("clear-history")?.addEventListener("click", async () => {
+    if (!confirm("내 분석 이력을 모두 삭제할까요? 업로드한 영상도 함께 지워집니다. (처리 중인 작업은 남습니다)")) return;
+    const res = await fetch("/api/analyses/clear/", {
+      method: "POST", credentials: "same-origin", headers: { "X-CSRFToken": csrf },
+    });
+    if (!res.ok) return alert(`삭제 실패 (HTTP ${res.status})`);
+    const body = await res.json();
+    body.deleted_ids.forEach((id) => historyBody.querySelector(`tr[data-id="${id}"]`)?.remove());
+    showEmptyIfNeeded();
+  });
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

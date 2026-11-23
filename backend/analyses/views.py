@@ -55,6 +55,18 @@ class AnalysisJobViewSet(
         # 분석이 끝날 때까지 기다리지 않고 작업 ID를 바로 돌려줍니다.
         return Response({"id": serializer.instance.pk, "status": serializer.instance.status}, status=status.HTTP_202_ACCEPTED)
 
+    @action(detail=False, methods=["post"])
+    def clear(self, request):
+        """내 분석 이력 전체 삭제. 관리자라도 본인 것만 지우고, 처리 중인 작업은 남깁니다."""
+        jobs = AnalysisJob.objects.filter(user=request.user).exclude(status=AnalysisJob.Status.STARTED)
+        videos = [job.video for job in jobs if job.video]
+        deleted_ids = list(jobs.values_list("pk", flat=True))
+        jobs.delete()
+        for video in videos:
+            video.delete(save=False)
+        skipped = AnalysisJob.objects.filter(user=request.user).count()
+        return Response({"deleted": len(deleted_ids), "deleted_ids": deleted_ids, "skipped": skipped})
+
     def perform_destroy(self, instance):
         # 사람별 예측은 FK CASCADE로 함께 삭제, 영상 파일도 지웁니다. 처리 중인 작업은 지우지 않습니다.
         if instance.status == AnalysisJob.Status.STARTED:

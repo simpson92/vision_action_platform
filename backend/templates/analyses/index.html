@@ -70,7 +70,10 @@
 </div>
 
 <section class="card">
-  <h2>최근 분석 이력</h2>
+  <div class="section-head">
+    <h2>최근 분석 이력</h2>
+    <button type="button" class="link danger" id="clear-history">전체 지우기</button>
+  </div>
   <table class="table" id="history">
     <thead><tr><th>#</th><th>시간</th><th>입력</th><th>상태</th><th>결과</th><th></th></tr></thead>
     <tbody>
@@ -81,7 +84,7 @@
         <td>{{ job.get_input_type_display }}</td>
         <td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td>
         <td>{% for p in job.predictions.all %}<span class="chip">#{{ p.track_id }} {{ p.action_display }} {{ p.confidence|floatformat:2 }}</span>{% empty %}{{ job.error_message|default:job.result_message|default:"-"|truncatechars:40 }}{% endfor %}</td>
-        <td><a href="{% url 'analyses:detail' job.id %}">상세</a></td>
+        <td class="actions"><a href="{% url 'analyses:detail' job.id %}">상세</a> <button type="button" class="link danger del-job">삭제</button></td>
       </tr>
       {% empty %}
       <tr class="empty"><td colspan="6" class="muted">아직 분석 기록이 없습니다.</td></tr>

@@ -134,6 +134,21 @@ class AnalysisApiTests(TestCase):
         self.assertEqual(self.client.delete(f"/api/analyses/{job.pk}/").status_code, 204)
         self.assertFalse(PersonPrediction.objects.filter(job_id=job.pk).exists())
 
+    @mock.patch("analyses.tasks.predict_video", return_value=FAKE_RESULT)
+    def test_clear_deletes_only_my_finished_jobs(self, _):
+        done = self.create_job(self.a)
+        run_analysis.apply(args=[done.pk])
+        running = self.create_job(self.a)
+        AnalysisJob.objects.filter(pk=running.pk).update(status="STARTED")
+        other = self.create_job(self.b)
+        self.client.force_login(self.a)
+        res = self.client.post("/api/analyses/clear/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["deleted_ids"], [done.pk])
+        self.assertTrue(AnalysisJob.objects.filter(pk=running.pk).exists())
+        self.assertTrue(AnalysisJob.objects.filter(pk=other.pk).exists())
+        self.assertFalse(PersonPrediction.objects.filter(job_id=done.pk).exists())
+
     # T08: 관리자만 대시보드·전체 목록
     @mock.patch("analyses.tasks.predict_video", return_value=FAKE_RESULT)
     def test_dashboard_admin_only(self, _):
