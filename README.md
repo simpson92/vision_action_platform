@@ -277,8 +277,7 @@ sequenceDiagram
 
 ### 오류·실패
 ![실패](docs/images/failure.png)
-입력: 확장자만 .mp4인 텍스트 파일 → 결과: 실패, "영상을 열 수 없습니다. MP4 파일인지 확인해 주세요." (이전 디자인 캡처)
-IP Webcam이 꺼져 있을 때 → 실패, "카메라에 연결하지 못했습니다. 휴대폰 IP Webcam 앱이 켜져 있고 같은 Wi-Fi인지 확인해 주세요." ([캡처](docs/images/ipwebcam_fail.png))
+입력: IP Webcam 탭에서 카메라 1로 분석 시작(휴대폰 앱이 꺼져 있음) → 결과: **실패**, "카메라에 연결하지 못했습니다. 휴대폰 IP Webcam 앱이 켜져 있고 같은 Wi-Fi인지 확인해 주세요." 실패한 작업도 사유와 함께 이력에 남습니다.
 
 ### 관리자 대시보드
 ![대시보드](docs/images/dashboard.png)

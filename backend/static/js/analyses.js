@@ -83,7 +83,9 @@
     const meta = job.video_meta || {};
     if (!person || job.status !== "SUCCESS") {
       ["conf", "margin", "agree", "pose"].forEach((k) => { setText(k, "-"); setRing(k, 0); });
-      setText("conf-sub", job.status === "FAILURE" ? "분석 실패" : "결과 없음");
+      // 이전 영상의 설명 문구가 남지 않도록 모두 비움
+      const why = job.status === "FAILURE" ? "분석 실패" : job.is_finished ? "사람을 찾지 못함" : "분석 중";
+      ["conf-sub", "margin-sub", "agree-sub", "pose-sub"].forEach((k) => setText(k, why));
       drawTimeline(null);
       drawCompare(null);
       return;
