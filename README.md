@@ -2,7 +2,7 @@
 
 6일차에 학습한 Random Forest 동작 인식 모델(6개 Action)을 **다시 학습하지 않고** 재사용해, 브라우저에서 **영상 업로드** 또는 **IP Webcam**으로 AI 분석을 요청하고, 결과를 PostgreSQL에 저장하며, 관리자가 대시보드로 확인하는 웹 서비스입니다.
 
-사용자는 분석 진행 단계(대기 → 처리 중 → 완료/실패)와 **영상 속 사람별(Track ID) 동작·Confidence·입력 품질**을 확인하고, 관리자는 Django Admin과 `/dashboard/` 차트로 전체 기록을 봅니다.
+사용자는 분석 진행 단계(대기 → 처리 중 → 완료/실패)와 **영상 속 사람별(Track ID) 동작·Confidence·입력 품질**, 그리고 **그 영상에서 AI가 왜 그렇게 판단했는지(구간별 확률 그래프)**를 확인하고, 관리자는 Django Admin과 `/dashboard/` 차트로 전체 기록을 봅니다.
 
 > 예측 Label은 정답이나 위험행동 판정이 아닙니다. 학습 데이터가 1명 × 6개 영상뿐이라, 확률이 낮거나 1·2등 차이가 작으면 **판단 보류**로 표시합니다.
 
@@ -14,7 +14,8 @@
 |---|---|
 | 해결하는 문제 | 1~8일차 Python 스크립트로만 돌던 동작 인식을, 로그인한 사용자가 웹에서 요청하고 결과가 DB에 남는 서비스로 만들기 |
 | 입력 | ① MP4 영상 업로드 ② 허용된 IP Webcam에서 8초 수집 |
-| 결과 | 작업 상태, 사람별 Track ID · 동작 · Confidence · 1·2등 차이 · 입력 품질, 최근 이력, 상세 화면 |
+| 결과 | 작업 상태, 사람별 Track ID · 동작 · Confidence · 1·2등 차이 · 입력 품질, 최근 이력(접기/펴기), 상세 화면 |
+| 판단 근거 | 지금 보는 영상의 지표 4개(1등 확률, 2등과 차이, 구간 일치율, 관절 인식 품질) + 그래프 2개(영상 구간별 동작 확률, 전체 구간 vs 구간 평균) |
 | 관리자 | Django Admin(검색·필터), `/dashboard/`(동작별 예측 건수, 상태별 작업 건수 + 입력 방식별 처리 시간) |
 | 구성 | Django·DRF · Celery Worker · Redis · FastAPI · PostgreSQL (Docker Compose 5개 서비스) |
 
@@ -57,7 +58,7 @@ docker compose exec django python manage.py createsuperuser   # .env에 DJANGO_S
 테스트:
 
 ```bash
-docker compose exec django python manage.py test           # 웹·권한·Celery 저장 14개
+docker compose exec django python manage.py test           # 웹·권한·Celery 저장 15개
 docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테스트 영상이 있으면 실제 추론까지)
 ```
 
@@ -127,6 +128,8 @@ erDiagram
         string celery_task_id
         text error_message
         int processing_ms
+        float video_duration_sec
+        json video_meta "fps, frame_count, 해상도"
         datetime created_at
         datetime completed_at
     }
@@ -138,7 +141,9 @@ erDiagram
         string raw_label
         float confidence
         float margin
-        json probabilities
+        json probabilities "최종 6개 동작 확률"
+        json details "판단 근거: 구간별 확률, 구간 일치율, 관절 인식"
+        int window_count
         int valid_frames
         string input_quality
     }
@@ -148,7 +153,7 @@ erDiagram
 |---|---|
 | `auth_user` | 회원(아이디, 비밀번호 해시, 관리자 여부) |
 | `AnalysisJob` | 분석 요청 1건: 누가, 어떤 입력으로, 지금 상태, 오류 사유, 처리 시간 |
-| `PersonPrediction` | 한 작업 안의 사람 1명의 예측. 두 사람이 나오면 작업 1건에 2행. `(job, track_id)` 유일 |
+| `PersonPrediction` | 한 작업 안의 사람 1명의 예측. 두 사람이 나오면 작업 1건에 2행. `(job, track_id)` 유일. 화면 그래프에 쓰는 판단 근거(`details`)도 함께 저장 |
 
 - 영상 파일 자체는 DB가 아니라 Media 볼륨에 두고 경로만 저장합니다.
 - IP Webcam 주소는 DB·화면에 남기지 않고 허용 목록 번호(`camera_index`)만 저장합니다.
@@ -188,15 +193,17 @@ sequenceDiagram
     end
     T->>F: POST /predict/video (영상)
     F->>AI: Pose·ByteTrack → 38-D Feature → 30 Step → RandomForest
-    AI-->>F: track_id별 action·confidence
+    AI-->>F: track_id별 action·confidence + 구간별 확률(timeline)
     F-->>T: predictions JSON (or 422 오류)
-    T->>DB: ORM: PersonPrediction 저장 + SUCCESS / FAILURE
+    T->>DB: ORM: PersonPrediction(+details) 저장 + SUCCESS / FAILURE
     loop 1초 간격 (점점 느리게)
         JS->>V: GET /api/analyses/{id}/status/
         V-->>JS: 상태 · 사람별 결과
     end
-    JS-->>U: 진행 단계 · 사람별 카드 표시
+    JS-->>U: 진행 단계 · 사람별 카드 · 영상 지표 4개 · 그래프 2개
 ```
+
+상단 지표와 그래프는 **누적 통계가 아니라 지금 보는 영상 한 건**의 값입니다. 이력 표에서 다른 행을 누르면 그 영상의 결과로 바뀌고, 한 영상에 사람이 여럿이면 사람 카드를 눌러 바꿉니다. 전체 누적 통계는 관리자 대시보드에서만 봅니다.
 
 ## 6. 사용한 모델과 입력 형식
 
@@ -222,8 +229,11 @@ sequenceDiagram
   "video": {"filename": "S03_A001_T01.mp4", "fps": 25.0, "frame_count": 62, "duration_sec": 2.48},
   "predictions": [
     {"track_id": 1, "action_label": "bend_return", "raw_label": "bend_return",
-     "confidence": 0.25, "margin": 0.057, "window_count": 2, "valid_frames": 62,
-     "input_quality": "good", "probabilities": {"bend_return": 0.25, "leg_raise_lower": 0.193, "...": 0}}
+     "confidence": 0.25, "margin": 0.057, "window_count": 1, "window_agreement": 1.0,
+     "valid_frames": 62, "detected_frames": 62, "interpolated_joints": 0, "mean_keypoint_conf": 0.95,
+     "input_quality": "good", "probabilities": {"bend_return": 0.25, "leg_raise_lower": 0.193, "...": 0},
+     "whole_probabilities": {"...": 0}, "window_mean_probabilities": {"...": 0},
+     "timeline": [{"start_sec": 0.0, "end_sec": 2.44, "label": "bend_return", "probabilities": {"...": 0}}]}
   ],
   "processing_ms": 3100
 }
@@ -231,6 +241,7 @@ sequenceDiagram
 
 - 읽을 수 없는 영상 → `422` + 사유 / 지원하지 않는 형식·빈 파일 → `400` / 모델 미준비 → `503`
 - 영상은 정상인데 사람이 없음 → `200`, `status: "no_person"`, 빈 `predictions`
+- `timeline`은 2초 구간(0.5초씩 이동)마다의 확률, `window_agreement`는 그 구간들 중 최종 1등과 같은 답을 낸 비율입니다. 화면의 "구간 일치율"과 그래프가 이 값을 씁니다.
 - Celery는 422·400은 바로 **FAILURE**, 503·타임아웃·연결 실패는 **2번 재시도** 후 FAILURE로 저장합니다.
 
 ## 7. 실행 결과와 검증
@@ -248,27 +259,47 @@ sequenceDiagram
 - 오답은 모두 1·2등 차이가 작아 "판단 보류"로 표시됐습니다. 확정한 결과는 모두 맞았습니다.
 - 좌우 반전 예측 평균, 구간 길이 섞기, fps 영향도 같은 방법(S02로만 비교)으로 시험했지만 분명히 좋아지지 않아 반영하지 않았습니다: [`docs/inference_experiments.md`](docs/inference_experiments.md)
 
-> 아래 캡처는 개발 환경에서 같은 코드로 실행한 화면입니다. 시연 PC(Docker)에서 다시 캡처해 교체합니다.
+> 아래 캡처는 시연 PC(Windows + WSL2 Docker)에서 5개 서비스를 띄우고 찍은 화면입니다. "판단 보류" 화면만 같은 코드로 개발 환경에서 찍었습니다.
 
 ### 정상 분석
-![정상 분석](docs/images/success.png)
-입력: `S03_A001_T01.mp4`(허리 굽혔다 펴기) → 결과: 사람 #1 **허리 굽혔다 펴기**, Confidence 25.0%, 2등과 차이 5.7%p, AI 처리 약 4초
+![정상 분석](docs/images/analysis.png)
+입력: `S03_A006_T01.mp4`(손 흔들기) → 사람 #1 **손 흔들기**, Confidence 33.0%(무작위 16.7%의 2.0배), 2등과 차이 14.1%p, 2초 구간 6개 모두 같은 답(구간 일치율 100%), 관절 인식 0.97, AI 처리 4.0초
 
-### 두 사람이 보이는 영상 (T04)
-![두 사람](docs/images/two_people.png)
-입력: `S02_A001_T01.mp4`(뒤쪽에 다른 사람이 서 있음) → 작업 1건에 결과 2건: 사람 #1 **허리 굽혔다 펴기**, 사람 #2 **판단 보류**
+### 판단 보류 (AI가 답을 미룬 경우)
+![판단 보류](docs/images/uncertain.png)
+입력: `S03_A005_T01.mp4`(앉았다 일어나기) → 1등 손 흔들기 22.2%와 2등 앉았다 일어나기 21%의 차이가 1.2%p라 기준(3%p)에 못 미쳐 **판단 보류**. 구간별 그래프에서 두 동작이 구간마다 엎치락뒤치락하는 것이 보입니다. 틀린 답을 확정하는 대신 보류합니다.
+
+### 최근 분석 이력 · 두 사람이 보이는 영상 (T04)
+![이력](docs/images/history.png)
+행을 누르면 위 지표·그래프가 그 영상으로 바뀝니다. #13은 한 영상에 두 사람이 잡혀 결과가 2건(#1 판단 보류, #2 마시고 제자리로)으로 저장됐습니다. #1은 실패한 작업이 사유와 함께 남은 예입니다. 제목을 누르면 표를 접을 수 있습니다.
+
+![이력 접힘](docs/images/history_folded.png)
 
 ### 오류·실패
 ![실패](docs/images/failure.png)
-입력: 확장자만 .mp4인 텍스트 파일 → 결과: 실패, "영상을 열 수 없습니다. MP4 파일인지 확인해 주세요."
+입력: 확장자만 .mp4인 텍스트 파일 → 결과: 실패, "영상을 열 수 없습니다. MP4 파일인지 확인해 주세요." (이전 디자인 캡처)
 IP Webcam이 꺼져 있을 때 → 실패, "카메라에 연결하지 못했습니다. 휴대폰 IP Webcam 앱이 켜져 있고 같은 Wi-Fi인지 확인해 주세요." ([캡처](docs/images/ipwebcam_fail.png))
 
-### 관리자 화면 · 대시보드
+### 관리자 대시보드
 ![대시보드](docs/images/dashboard.png)
-관리자 계정으로 `/dashboard/`: 동작별 예측 건수(막대), 작업 상태별 건수(도넛), 입력 방식별 건수·평균 AI 처리 시간
+관리자 계정으로 `/dashboard/`: 전체 사용자의 누적 통계. 동작별 예측 건수(막대), 작업 상태별 건수(도넛), 입력 방식별 건수·평균 AI 처리 시간
 
-![Django Admin](docs/images/admin.png)
-Django Admin: 작업 ID·사용자·입력 방식·상태·사람별 결과, 상태·입력 방식·동작 필터, 사용자 검색
+### Django Admin · 권한
+![Admin 작업 목록](docs/images/admin_jobs.png)
+분석 작업 목록: 사용자·입력 방식·상태·사람별 결과·AI 처리 시간, 상태·입력 방식·동작·날짜 필터
+
+![Admin 사람별 예측](docs/images/admin_predictions.png)
+사람별 예측: 작업·Track ID·동작·Confidence·margin·입력 품질
+
+![Admin 사용자](docs/images/admin_users.png)
+사용자: 관리자(`admin`, 스태프)와 일반 회원(`sim`)
+
+![권한 없음](docs/images/admin_denied.png)
+일반 회원(`sim`)이 `/admin/`에 들어가면 접근 권한이 없다고 막힙니다.
+
+### DRF API
+![DRF API](docs/images/api_list.png)
+`/api/analyses/`: 로그인한 사용자 **본인의 작업만** 보입니다. 캡처는 `admin`으로 연 화면이라 0건이고(분석은 `sim`이 함), 관리자는 `?all=1`로 전체를 봅니다. 같은 주소로 분석을 등록(POST)할 수도 있습니다.
 
 ### 기능 테스트 (과제 11장)
 
@@ -295,6 +326,7 @@ Django Admin: 작업 ID·사용자·입력 방식·상태·사람별 결과, 상
 | 모델 파일 로드 | `joblib.load()` 바로 호출 | SHA256 해시 확인 후 로드 | `joblib.load`는 pickle 실행 → 우리 파일인지 확인 |
 | 입력 품질 | 없음 | 검출 Frame 비율·관절 Confidence로 좋음/보통/나쁨 표시 | 과제 문서: "Confidence와 입력 품질을 함께 표시" |
 | 카메라 주소 | 사용자 입력 | `.env` 허용 목록에서 번호로만 선택 | 임의 URL 호출(SSRF) 방지, 접속정보 비노출 |
+| 결과 화면 | 동작 이름과 확률 | 영상 한 건의 판단 근거(구간별 확률 그래프, 구간 일치율, 관절 인식 품질)를 함께 표시 | 확률이 낮은 모델이라 숫자 하나보다 "왜 이 답인지, 왜 보류했는지"를 보여 주는 게 더 정직함 |
 
 참고 논문
 - Nunes, Faria, Peixoto (2017). *Pattern Recognition Letters* — 스켈레톤 Feature + Random Forest
@@ -350,7 +382,8 @@ vision_action_platform/
 │   ├── services/            # model_loader, pose_pipeline, action_inference
 │   ├── src/                 # 6~8일차 원본 모듈 (common.py 경로만 수정)
 │   ├── models/              # joblib · JSON · YOLO Pose · SHA256SUMS
-│   ├── scripts/evaluate_videos.py  tests/
+│   ├── scripts/             # evaluate_videos(정확도 평가), experiment_inference(추론 방식 실험)
+│   ├── tests/
 │   ├── Dockerfile  requirements.txt
 ├── compose.yaml  .env.example  docs/
 ```
