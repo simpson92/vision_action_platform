@@ -304,16 +304,16 @@ sequenceDiagram
 
 | 테스트 | 확인 방법 | 결과 |
 |---|---|---|
-| T01 모델 불러오기 | `GET /health`, `test_health_model_ready` | 6 Class · 1,140 Feature |
+| T01 모델 불러오기 | `GET /health`, `test_health_model_ready` | 6 Class · 1,140 Feature ([캡처](docs/images/t01_health.png)) |
 | T02 영상 업로드 | S03 영상 업로드 | 작업 등록 → 사람별 결과 ([캡처](docs/images/analysis.png)) |
 | T03 IP Webcam | 휴대폰 IP Webcam 8초 | <!-- 시연 후 기록 --> |
 | T04 사람별 결과 | S02_A001 영상(뒤에 사람 1명 더) | Track ID 2개로 분리 저장 (#13, [캡처](docs/images/admin_predictions.png)) |
-| T05 비동기 | `test_create_returns_job_id_immediately` | 202 + 작업 ID 즉시 반환 |
+| T05 비동기 | `test_create_returns_job_id_immediately` | 202 + 작업 ID 즉시 반환 (#20 처리 중, [캡처](docs/images/t05_async.png)) |
 | T06 영구 저장 | `test_task_saves_predictions`, 새로고침 | DB에 작업·예측 유지 ([이력](docs/images/history.png), [Admin](docs/images/admin_jobs.png)) |
-| T07 CRUD 권한 | `test_user_cannot_touch_others_job` | 남의 작업 조회·수정·삭제 404 |
+| T07 CRUD 권한 | `test_user_cannot_touch_others_job` | 남의 작업 조회·수정·삭제 404 ([캡처](docs/images/t07_forbidden.png)) |
 | T08 관리자 | `test_dashboard_admin_only` | 관리자만 대시보드·전체 목록 ([대시보드](docs/images/dashboard.png), [일반 회원 차단](docs/images/admin_denied.png)) |
 | T09 예외 처리 | 잘못된 파일 업로드, 꺼진 카메라 / `test_task_failure_is_saved` | FAILURE + 사용자용 사유 저장 ([캡처](docs/images/failure.png)) |
-| T10 Docker | `docker compose restart` 후 재조회 | <!-- 시연 후 기록 --> |
+| T10 Docker | `docker compose restart` 후 재조회 | 5개 서비스 재시작 후 Up ([캡처](docs/images/t10_restart.png)) |
 
 ## 8. 교재와 다르게 구현한 점과 이유
 
