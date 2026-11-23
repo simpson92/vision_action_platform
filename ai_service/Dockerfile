@@ -10,7 +10,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 # GPU가 없는 컨테이너라 CPU 전용 torch를 먼저 설치 (CUDA 판보다 수 GB 작음)
 ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir torch==2.15.0 --index-url ${TORCH_INDEX_URL}
+# torchvision도 같은 CPU 저장소에서 함께 설치해야 torch와 짝이 맞음.
+# (PyPI의 torchvision을 따로 받으면 다른 torch 판으로 빌드된 것이라 추론 때 "torchvision::nms does not exist" 오류)
+RUN pip install --no-cache-dir torch==2.15.0 torchvision --index-url ${TORCH_INDEX_URL}
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 # ultralytics가 화면용 opencv-python을 같이 설치해 headless판을 덮어씀 → libxcb/libGL을 찾다 시작 실패.
