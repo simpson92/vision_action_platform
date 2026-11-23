@@ -58,7 +58,7 @@ docker compose exec django python manage.py createsuperuser   # .env에 DJANGO_S
 테스트:
 
 ```bash
-docker compose exec django python manage.py test           # 웹·권한·Celery 저장 15개
+docker compose exec django python manage.py test           # 웹·권한·Celery 저장 16개
 docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테스트 영상이 있으면 실제 추론까지)
 ```
 
