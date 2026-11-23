@@ -53,6 +53,8 @@ flowchart LR
     C -->|영상 전달| F[fastapi: AI 추론]
     F -->|사람별 예측 JSON| C
     C -->|ORM 결과 저장| P
+    B -.->|상태·결과 조회| D
+    D -.->|ORM 조회| P
 ```
 
 ## 4. DB 설계 (ERD)
@@ -84,26 +86,38 @@ erDiagram
 
 <!-- TODO: 실제 필드로 갱신, 테이블별 한 줄 설명 -->
 
-## 5. AI 추론 버튼 구현 흐름
-
-<!-- TODO: 실제 구현한 파일명으로 갱신 -->
-
-```mermaid
+## 5. AI 추```mermaid
 sequenceDiagram
     participant JS as analyses.js
     participant V as views.py (DRF)
+    participant S as serializers.py
+    participant DB as PostgreSQL
+    participant R as Redis
     participant T as tasks.py (Celery)
     participant F as predictions.py (FastAPI)
-    participant DB as PostgreSQL
-    JS->>V: POST /api/analyses/
-    V->>DB: AnalysisJob 생성 (PENDING)
-    V-->>JS: 작업 ID 반환
-    V->>T: 커밋 후 작업 등록
-    T->>F: POST /predict/video
+    participant M as action_inference.py
+    JS->>V: POST /api/analyses/ (영상 또는 카메라)
+    V->>S: 입력 검증
+    alt 잘못된 입력
+        S-->>JS: 400 오류 응답
+    else 정상 입력
+        V->>DB: AnalysisJob 생성 (PENDING)
+        V->>R: 커밋 후 task.delay(job_id)
+        V-->>JS: 작업 ID 반환
+    end
+    R->>T: 작업 수신 (STARTED)
+    T->>F: POST /predict/video (HTTP)
+    F->>F: Pydantic·영상 입력 검증
+    F->>M: Pose → Feature → RandomForest
+    M-->>F: track_id별 action·confidence
     F-->>T: predictions JSON
-    T->>DB: 상태·PersonPrediction 저장
-    loop 상태 조회
+    T->>DB: ORM으로 상태(SUCCESS/FAILURE)·PersonPrediction 저장
+    loop 완료될 때까지
         JS->>V: GET /api/analyses/{id}/status/
+        V->>DB: ORM 조회
+        V-->>JS: 상태·사람별 결과
+    end
+```: GET /api/analyses/{id}/status/
     end
 ```
 
