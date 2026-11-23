@@ -21,8 +21,9 @@ db.sqlite3
 *.mov
 *.mkv
 
-# YOLO Pose 가중치 (ultralytics가 자동 다운로드)
+# YOLO Pose 가중치: 시연용 yolo11n-pose.pt(6MB)만 포함 (오프라인 대비)
 *.pt
+!ai_service/models/yolo11n-pose.pt
 
 # 모델 파일: rf_action_baseline.joblib(약 365KB)은 저장소에 포함
 # 포함하지 않으려면 아래 줄의 주석을 해제하고 README에 배치 방법 기록
