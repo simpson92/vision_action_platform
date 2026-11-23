@@ -8,7 +8,8 @@ import torch
 
 # ② 프로젝트 최상위 폴더와 설정 파일의 경로 지정
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = PROJECT_ROOT / "configs" / "project.json"
+# vision_action_platform: project.json은 ai_service/ 바로 아래에 둠 (원본은 configs/project.json)
+CONFIG_PATH = PROJECT_ROOT / "project.json"
 
 
 # ③ JSON 설정 파일 읽기

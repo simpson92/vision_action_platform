@@ -1,0 +1,14 @@
+S02_A001_T01.mp4     정답=bend_return      1등=bend_return      conf=0.279 margin=0.066 O → bend_return
+S02_A002_T01.mp4     정답=leg_raise_lower  1등=drink_return     conf=0.223 margin=0.008 X → UNCERTAIN
+S02_A003_T01.mp4     정답=walk_turn_walk   1등=leg_raise_lower  conf=0.212 margin=0.025 X → UNCERTAIN
+S02_A004_T01.mp4     정답=drink_return     1등=drink_return     conf=0.222 margin=0.010 O → UNCERTAIN
+S02_A005_T01.mp4     정답=sit_stand        1등=sit_stand        conf=0.307 margin=0.116 O → sit_stand
+S02_A006_T01.mp4     정답=wave             1등=wave             conf=0.237 margin=0.026 O → UNCERTAIN
+S03_A001_T01.mp4     정답=bend_return      1등=bend_return      conf=0.250 margin=0.057 O → bend_return
+S03_A002_T01.mp4     정답=leg_raise_lower  1등=leg_raise_lower  conf=0.350 margin=0.179 O → leg_raise_lower
+S03_A003_T01.mp4     정답=walk_turn_walk   1등=walk_turn_walk   conf=0.207 margin=0.007 O → UNCERTAIN
+S03_A004_T01.mp4     정답=drink_return     1등=drink_return     conf=0.299 margin=0.006 O → UNCERTAIN
+S03_A005_T01.mp4     정답=sit_stand        1등=wave             conf=0.222 margin=0.012 X → UNCERTAIN
+S03_A006_T01.mp4     정답=wave             1등=wave             conf=0.330 margin=0.141 O → wave
+S02: Top-1 정확도 4/6
+S03: Top-1 정확도 5/6

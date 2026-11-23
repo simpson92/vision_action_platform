@@ -8,4 +8,12 @@ joblib==1.6.0
 opencv-python-headless==5.0.0.93
 ultralytics==8.4.203
 torch==2.15.0
-# TODO: fastapi, uvicorn, python-multipart, pydantic
+# ByteTrack(model.track)에 필요. ultralytics가 실행 중 자동 설치하려 하므로 미리 고정
+lap==0.5.14
+fastapi==0.165.0
+uvicorn==0.54.0
+python-multipart==0.0.34
+pydantic==2.14.4
+# 테스트용
+pytest==9.2.0
+httpx==0.28.1
