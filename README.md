@@ -259,46 +259,42 @@ sequenceDiagram
 - 오답은 모두 1·2등 차이가 작아 "판단 보류"로 표시됐습니다. 확정한 결과는 모두 맞았습니다.
 - 좌우 반전 예측 평균, 구간 길이 섞기, fps 영향도 같은 방법(S02로만 비교)으로 시험했지만 분명히 좋아지지 않아 반영하지 않았습니다: [`docs/inference_experiments.md`](docs/inference_experiments.md)
 
-> 아래 캡처는 시연 PC(Windows + WSL2 Docker)에서 5개 서비스를 띄우고 찍은 화면입니다. "판단 보류" 화면만 같은 코드로 개발 환경에서 찍었습니다.
+> 과제 12장이 요구하는 캡처 4장(정상 분석·오류·관리자 화면·대시보드)에, 이 서비스의 특징인 "판단 보류" 1장을 더했습니다. 캡처는 시연 PC(Windows + WSL2 Docker)에서 5개 서비스를 띄우고 찍었고, "판단 보류"만 같은 코드로 개발 환경에서 찍었습니다. 이미지를 누르면 원본 크기로 열립니다.
 
-### 정상 분석
-![정상 분석](docs/images/analysis.png)
-입력: `S03_A006_T01.mp4`(손 흔들기) → 사람 #1 **손 흔들기**, Confidence 33.0%(무작위 16.7%의 2.0배), 2등과 차이 14.1%p, 2초 구간 6개 모두 같은 답(구간 일치율 100%), 관절 인식 0.97, AI 처리 4.0초
+### ① 정상 분석
 
-### 판단 보류 (AI가 답을 미룬 경우)
-![판단 보류](docs/images/uncertain.png)
-입력: `S03_A005_T01.mp4`(앉았다 일어나기) → 1등 손 흔들기 22.2%와 2등 앉았다 일어나기 21%의 차이가 1.2%p라 기준(3%p)에 못 미쳐 **판단 보류**. 구간별 그래프에서 두 동작이 구간마다 엎치락뒤치락하는 것이 보입니다. 틀린 답을 확정하는 대신 보류합니다.
+<p align="center"><a href="docs/images/analysis.png"><img src="docs/images/analysis.png" width="820" alt="정상 분석"></a></p>
 
-### 최근 분석 이력 · 두 사람이 보이는 영상 (T04)
-![이력](docs/images/history.png)
-행을 누르면 위 지표·그래프가 그 영상으로 바뀝니다. #13은 한 영상에 두 사람이 잡혀 결과가 2건(#1 판단 보류, #2 마시고 제자리로)으로 저장됐습니다. #1은 실패한 작업이 사유와 함께 남은 예입니다. 제목을 누르면 표를 접을 수 있습니다.
+> **입력** 영상 업로드 탭에 `S03_A006_T01.mp4`(손 흔들기)<br>
+> **결과** 사람 #1 **손 흔들기**, Confidence 33.0%(무작위 16.7%의 2.0배), 2등과 차이 14.1%p, 2초 구간 6개 모두 같은 답, 관절 인식 0.97, AI 처리 4.0초
 
-![이력 접힘](docs/images/history_folded.png)
+### ② 오류·실패
 
-### 오류·실패
-![실패](docs/images/failure.png)
-입력: IP Webcam 탭에서 카메라 1로 분석 시작(휴대폰 앱이 꺼져 있음) → 결과: **실패**, "카메라에 연결하지 못했습니다. 휴대폰 IP Webcam 앱이 켜져 있고 같은 Wi-Fi인지 확인해 주세요." 실패한 작업도 사유와 함께 이력에 남습니다.
+<p align="center"><a href="docs/images/failure.png"><img src="docs/images/failure.png" width="820" alt="실패"></a></p>
 
-### 관리자 대시보드
-![대시보드](docs/images/dashboard.png)
-관리자 계정으로 `/dashboard/`: 전체 사용자의 누적 통계. 동작별 예측 건수(막대), 작업 상태별 건수(도넛), 입력 방식별 건수·평균 AI 처리 시간
+> **입력** IP Webcam 탭에서 카메라 1로 분석 시작(휴대폰 앱이 꺼져 있음)<br>
+> **결과** **실패**, "카메라에 연결하지 못했습니다. 휴대폰 IP Webcam 앱이 켜져 있고 같은 Wi-Fi인지 확인해 주세요." 실패한 작업도 사유와 함께 이력에 남음
 
-### Django Admin · 권한
-![Admin 작업 목록](docs/images/admin_jobs.png)
-분석 작업 목록: 사용자·입력 방식·상태·사람별 결과·AI 처리 시간, 상태·입력 방식·동작·날짜 필터
+### ③ 관리자 화면 (Django Admin)
 
-![Admin 사람별 예측](docs/images/admin_predictions.png)
-사람별 예측: 작업·Track ID·동작·Confidence·margin·입력 품질
+<p align="center"><a href="docs/images/admin_jobs.png"><img src="docs/images/admin_jobs.png" width="820" alt="Admin 작업 목록"></a></p>
 
-![Admin 사용자](docs/images/admin_users.png)
-사용자: 관리자(`admin`, 스태프)와 일반 회원(`sim`)
+> **입력** 관리자 계정으로 `/admin/` → 분석 작업<br>
+> **결과** 전체 사용자의 작업 목록: 사용자·입력 방식·상태·사람별 결과·AI 처리 시간, 상태·입력 방식·동작·날짜 필터. 일반 회원은 접근 불가 ([캡처](docs/images/admin_denied.png))
 
-![권한 없음](docs/images/admin_denied.png)
-일반 회원(`sim`)이 `/admin/`에 들어가면 접근 권한이 없다고 막힙니다.
+### ④ 관리자 대시보드
 
-### DRF API
-![DRF API](docs/images/api_list.png)
-`/api/analyses/`: 로그인한 사용자 **본인의 작업만** 보입니다. 캡처는 `admin`으로 연 화면이라 0건이고(분석은 `sim`이 함), 관리자는 `?all=1`로 전체를 봅니다. 같은 주소로 분석을 등록(POST)할 수도 있습니다.
+<p align="center"><a href="docs/images/dashboard.png"><img src="docs/images/dashboard.png" width="820" alt="대시보드"></a></p>
+
+> **입력** 관리자 계정으로 `/dashboard/`<br>
+> **결과** 전체 사용자 누적 통계: 동작별 예측 건수(막대), 작업 상태별 건수(도넛), 입력 방식별 건수·평균 AI 처리 시간
+
+### + 판단 보류 (AI가 답을 미룬 경우)
+
+<p align="center"><a href="docs/images/uncertain.png"><img src="docs/images/uncertain.png" width="820" alt="판단 보류"></a></p>
+
+> **입력** 영상 업로드 탭에 `S03_A005_T01.mp4`(앉았다 일어나기)<br>
+> **결과** 1등 손 흔들기 22.2%와 2등 앉았다 일어나기 21%의 차이가 1.2%p로 기준(3%p) 미만이라 **판단 보류**. 틀린 답을 확정하는 대신 보류함
 
 ### 기능 테스트 (과제 11장)
 
