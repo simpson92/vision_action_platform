@@ -223,21 +223,25 @@ sequenceDiagram
 
 ## 6. 사용한 모델과 입력 형식
 
-| 항목 | 내용 |
-|---|---|
-| 동작 분류 모델 | `rf_action_baseline.joblib` (6일차 Random Forest, 300 trees, S01 6 clip 학습) |
-| 입력 Feature | 30 Step × 38 Feature = 1,140 (정규화 좌표 34 + 팔꿈치·무릎 각도 4) |
-| Pose | `yolo11n-pose.pt` (COCO 17 Keypoint), image_size 640, person_conf 0.25, ByteTrack |
-| 지원 동작 | `bend_return`, `leg_raise_lower`, `walk_turn_walk`, `drink_return`, `sit_stand`, `wave` |
-| 업로드 형식 | MP4 등 영상, 최대 50MB. 전신이 보이는 3~10초 영상 권장 |
-| IP Webcam | `.env`의 `IP_WEBCAM_ALLOWED_URLS`에 등록한 카메라만, **8초** 수집 |
+<p align="center"><img src="docs/images/model_pipeline.svg" width="100%" alt="모델 파이프라인과 지원 동작"></p>
 
-**FastAPI API 계약**
+영상에서 사람마다 관절 17개를 찾고(YOLO11 Pose), 30 Step 동안의 움직임을 1,140개 숫자로 바꾼 뒤 Random Forest가 6개 동작 중 하나로 분류합니다. 모델 파일은 모두 `ai_service/models/`에 있습니다.
 
-| 엔드포인트 | 입력 | 반환 |
+- 📹 **업로드:** MP4 등 영상, 최대 50MB. 전신이 보이는 3~10초 영상이 가장 잘 맞습니다.
+- 📱 **IP Webcam:** `.env`의 `IP_WEBCAM_ALLOWED_URLS`에 등록한 카메라만, **8초** 수집합니다.
+
+#### ⚡ FastAPI가 받는 것과 돌려주는 것
+
+| 엔드포인트 | 받는 것 | 돌려주는 것 |
 |---|---|---|
-| `GET /health` | 없음 | 서버 상태, 모델 준비 여부, Class 6개, Feature 1,140 |
-| `POST /predict/video` | multipart `file` (영상) | `status`(ok/no_person), 영상 정보, `predictions[]`, `processing_ms` |
+| `GET /health` | 없음 | 모델 준비 여부, Class 6개, Feature 1,140 |
+| `POST /predict/video` | 영상 파일 (multipart `file`) | 사람(`track_id`)마다 동작 · Confidence · 1·2등 차이 · 구간별 확률 + 처리 시간 |
+
+> [!NOTE]
+> 읽을 수 없는 영상은 `422`, 지원하지 않는 형식·빈 파일은 `400`, 모델 미준비는 `503`을 돌려줍니다. 사람이 없으면 `200`과 `status: "no_person"`입니다. Celery는 `422`·`400`이면 바로 실패로 저장하고, `503`·타임아웃은 2번 다시 시도합니다.
+
+<details>
+<summary>응답 예시 보기 (JSON)</summary>
 
 ```json
 {
@@ -255,10 +259,9 @@ sequenceDiagram
 }
 ```
 
-- 읽을 수 없는 영상 → `422` + 사유 / 지원하지 않는 형식·빈 파일 → `400` / 모델 미준비 → `503`
-- 영상은 정상인데 사람이 없음 → `200`, `status: "no_person"`, 빈 `predictions`
-- `timeline`은 2초 구간(0.5초씩 이동)마다의 확률, `window_agreement`는 그 구간들 중 최종 1등과 같은 답을 낸 비율입니다. 화면의 "구간 일치율"과 그래프가 이 값을 씁니다.
-- Celery는 422·400은 바로 **FAILURE**, 503·타임아웃·연결 실패는 **2번 재시도** 후 FAILURE로 저장합니다.
+`timeline`은 2초 구간(0.5초씩 이동)마다의 확률이고, `window_agreement`는 그 구간들 중 최종 1등과 같은 답을 낸 비율입니다. 화면의 "구간 일치율"과 그래프가 이 값을 씁니다.
+
+</details>
 
 ## 7. 실행 결과와 검증
 

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="460" viewBox="0 0 960 460" font-family="'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#070d1f"/><stop offset="1" stop-color="#0c1836"/></linearGradient>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8fa6d8"/></marker></defs>
+<rect width="960" height="460" rx="16" fill="url(#bg)"/>
+<text x="30" y="40" font-size="13" font-weight="800" fill="#9fb0e0" letter-spacing="2">MODEL PIPELINE</text>
+<path d="M152 120 L236 120" stroke="#8fa6d8" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<path d="M342 120 L426 120" stroke="#8fa6d8" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<path d="M532 120 L616 120" stroke="#8fa6d8" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<path d="M722 120 L806 120" stroke="#8fa6d8" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<circle cx="100" cy="120" r="46" fill="#c3cae6" fill-opacity="0.12" stroke="#c3cae6" stroke-width="2.5" filter="url(#glow)"/>
+<g transform="translate(100,120)"><rect x="-28" y="-20" width="56" height="40" rx="5" fill="#0a1024" stroke="#c3cae6" stroke-width="2.5"/><g fill="#c3cae6"><rect x="-24" y="-16" width="5" height="5" rx="1"/><rect x="-24" y="-3" width="5" height="5" rx="1"/><rect x="-24" y="10" width="5" height="5" rx="1"/><rect x="19" y="-16" width="5" height="5" rx="1"/><rect x="19" y="-3" width="5" height="5" rx="1"/><rect x="19" y="10" width="5" height="5" rx="1"/></g><path d="M-6 -10 L10 0 L-6 10 Z" fill="#c3cae6"/></g>
+<text x="100" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">입력 영상</text>
+<text x="100" y="211" text-anchor="middle" font-size="11.5" fill="#c9d6ff">MP4 · 최대 50MB</text>
+<text x="100" y="228" text-anchor="middle" font-size="11.5" fill="#c9d6ff">IP Webcam 8초 수집</text>
+<circle cx="290" cy="120" r="46" fill="#38bdf8" fill-opacity="0.12" stroke="#38bdf8" stroke-width="2.5" filter="url(#glow)"/>
+<g transform="translate(290,120)"><g stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" fill="none"><line x1="0" y1="-14" x2="0" y2="6"/><line x1="0" y1="-10" x2="-14" y2="-2"/><line x1="-14" y1="-2" x2="-20" y2="-16"/><line x1="0" y1="-10" x2="14" y2="0"/><line x1="14" y1="0" x2="22" y2="-8"/><line x1="0" y1="6" x2="-10" y2="20"/><line x1="-10" y1="20" x2="-12" y2="30"/><line x1="0" y1="6" x2="10" y2="18"/><line x1="10" y1="18" x2="20" y2="24"/></g><circle cx="0" cy="-22" r="6" fill="#0a1024" stroke="#38bdf8" stroke-width="2.5"/><g fill="#fff"><circle cx="0" cy="-10" r="2.6"/><circle cx="-14" cy="-2" r="2.6"/><circle cx="14" cy="0" r="2.6"/><circle cx="0" cy="6" r="2.6"/><circle cx="-10" cy="20" r="2.6"/><circle cx="10" cy="18" r="2.6"/><circle cx="-20" cy="-16" r="2.6"/><circle cx="22" cy="-8" r="2.6"/></g></g>
+<text x="290" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">YOLO11 Pose</text>
+<text x="290" y="211" text-anchor="middle" font-size="11.5" fill="#c9d6ff">yolo11n-pose.pt</text>
+<text x="290" y="228" text-anchor="middle" font-size="11.5" fill="#c9d6ff">17 관절 · ByteTrack</text>
+<circle cx="480" cy="120" r="46" fill="#4da3ff" fill-opacity="0.12" stroke="#4da3ff" stroke-width="2.5" filter="url(#glow)"/>
+<g transform="translate(480,120)"><rect x="-27.0" y="-22.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.35"/><rect x="-17.5" y="-22.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.51"/><rect x="-8.0" y="-22.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.68"/><rect x="1.5" y="-22.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.84"/><rect x="11.0" y="-22.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="1.00"/><rect x="20.5" y="-22.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.35"/><rect x="-27.0" y="-12.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.84"/><rect x="-17.5" y="-12.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="1.00"/><rect x="-8.0" y="-12.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.35"/><rect x="1.5" y="-12.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.51"/><rect x="11.0" y="-12.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.68"/><rect x="20.5" y="-12.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.84"/><rect x="-27.0" y="-3.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.51"/><rect x="-17.5" y="-3.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.68"/><rect x="-8.0" y="-3.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.84"/><rect x="1.5" y="-3.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="1.00"/><rect x="11.0" y="-3.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.35"/><rect x="20.5" y="-3.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.51"/><rect x="-27.0" y="6.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="1.00"/><rect x="-17.5" y="6.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.35"/><rect x="-8.0" y="6.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.51"/><rect x="1.5" y="6.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.68"/><rect x="11.0" y="6.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.84"/><rect x="20.5" y="6.5" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="1.00"/><rect x="-27.0" y="16.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.68"/><rect x="-17.5" y="16.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.84"/><rect x="-8.0" y="16.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="1.00"/><rect x="1.5" y="16.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.35"/><rect x="11.0" y="16.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.51"/><rect x="20.5" y="16.0" width="7.5" height="7.5" rx="1.5" fill="#4da3ff" fill-opacity="0.68"/></g>
+<text x="480" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">Feature 만들기</text>
+<text x="480" y="211" text-anchor="middle" font-size="11.5" fill="#c9d6ff">30 Step × 38</text>
+<text x="480" y="228" text-anchor="middle" font-size="11.5" fill="#c9d6ff">= 1,140개</text>
+<circle cx="670" cy="120" r="46" fill="#2fd39a" fill-opacity="0.12" stroke="#2fd39a" stroke-width="2.5" filter="url(#glow)"/>
+<g transform="translate(670,120)"><g stroke="#2fd39a" stroke-width="2.2"><line x1="0" y1="-18" x2="-16" y2="0"/><line x1="0" y1="-18" x2="16" y2="0"/><line x1="-16" y1="0" x2="-24" y2="18"/><line x1="-16" y1="0" x2="-8" y2="18"/><line x1="16" y1="0" x2="8" y2="18"/><line x1="16" y1="0" x2="24" y2="18"/></g><g fill="#0a1024" stroke="#2fd39a" stroke-width="2.5"><circle cx="0" cy="-18" r="6"/><circle cx="-16" cy="0" r="5.5"/><circle cx="16" cy="0" r="5.5"/></g><g fill="#2fd39a"><circle cx="-24" cy="20" r="4.5"/><circle cx="-8" cy="20" r="4.5"/><circle cx="8" cy="20" r="4.5"/><circle cx="24" cy="20" r="4.5"/></g></g>
+<text x="670" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">Random Forest</text>
+<text x="670" y="211" text-anchor="middle" font-size="11.5" fill="#c9d6ff">rf_action_baseline</text>
+<text x="670" y="228" text-anchor="middle" font-size="11.5" fill="#c9d6ff">.joblib · 300 trees</text>
+<circle cx="860" cy="120" r="46" fill="#b18cff" fill-opacity="0.12" stroke="#b18cff" stroke-width="2.5" filter="url(#glow)"/>
+<g transform="translate(860,120)"><text x="0" y="12" text-anchor="middle" font-size="40" font-weight="700" font-family="Consolas,Menlo,monospace" fill="#b18cff">{ }</text><g stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="-6" y1="-6" x2="8" y2="-6"/><line x1="-6" y1="2" x2="4" y2="2"/><line x1="-6" y1="10" x2="8" y2="10"/></g></g>
+<text x="860" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">사람별 결과</text>
+<text x="860" y="211" text-anchor="middle" font-size="11.5" fill="#c9d6ff">track_id · 동작</text>
+<text x="860" y="228" text-anchor="middle" font-size="11.5" fill="#c9d6ff">Confidence · 판단 근거</text>
+<line x1="30" y1="276" x2="930" y2="276" stroke="#2a3768"/>
+<text x="30" y="302" font-size="13" font-weight="800" fill="#9fb0e0" letter-spacing="2">SUPPORTED ACTIONS · 6</text>
+<rect x="30.0" y="318" width="292.0" height="54" rx="27" fill="#4da3ff" fill-opacity="0.12" stroke="#4da3ff" stroke-width="1.8"/>
+<circle cx="57.0" cy="345" r="16" fill="#4da3ff"/><text x="57.0" y="351" text-anchor="middle" font-size="15" font-weight="800" fill="#0a1024">1</text>
+<text x="84.0" y="342" font-size="15" font-weight="800" fill="#ffffff">허리 굽혔다 펴기</text>
+<text x="84.0" y="360" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#4da3ff">bend_return</text>
+<rect x="334.0" y="318" width="292.0" height="54" rx="27" fill="#38bdf8" fill-opacity="0.12" stroke="#38bdf8" stroke-width="1.8"/>
+<circle cx="361.0" cy="345" r="16" fill="#38bdf8"/><text x="361.0" y="351" text-anchor="middle" font-size="15" font-weight="800" fill="#0a1024">2</text>
+<text x="388.0" y="342" font-size="15" font-weight="800" fill="#ffffff">다리 들었다 내리기</text>
+<text x="388.0" y="360" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#38bdf8">leg_raise_lower</text>
+<rect x="638.0" y="318" width="292.0" height="54" rx="27" fill="#2fd39a" fill-opacity="0.12" stroke="#2fd39a" stroke-width="1.8"/>
+<circle cx="665.0" cy="345" r="16" fill="#2fd39a"/><text x="665.0" y="351" text-anchor="middle" font-size="15" font-weight="800" fill="#0a1024">3</text>
+<text x="692.0" y="342" font-size="15" font-weight="800" fill="#ffffff">걷다가 방향 바꿔 걷기</text>
+<text x="692.0" y="360" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#2fd39a">walk_turn_walk</text>
+<rect x="30.0" y="386" width="292.0" height="54" rx="27" fill="#ffab3d" fill-opacity="0.12" stroke="#ffab3d" stroke-width="1.8"/>
+<circle cx="57.0" cy="413" r="16" fill="#ffab3d"/><text x="57.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#0a1024">4</text>
+<text x="84.0" y="410" font-size="15" font-weight="800" fill="#ffffff">마시고 제자리로</text>
+<text x="84.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffab3d">drink_return</text>
+<rect x="334.0" y="386" width="292.0" height="54" rx="27" fill="#ff5a6e" fill-opacity="0.12" stroke="#ff5a6e" stroke-width="1.8"/>
+<circle cx="361.0" cy="413" r="16" fill="#ff5a6e"/><text x="361.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#0a1024">5</text>
+<text x="388.0" y="410" font-size="15" font-weight="800" fill="#ffffff">앉았다 일어나기</text>
+<text x="388.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ff5a6e">sit_stand</text>
+<rect x="638.0" y="386" width="292.0" height="54" rx="27" fill="#b18cff" fill-opacity="0.12" stroke="#b18cff" stroke-width="1.8"/>
+<circle cx="665.0" cy="413" r="16" fill="#b18cff"/><text x="665.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#0a1024">6</text>
+<text x="692.0" y="410" font-size="15" font-weight="800" fill="#ffffff">손 흔들기</text>
+<text x="692.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#b18cff">wave</text>
+</svg>
