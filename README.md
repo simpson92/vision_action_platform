@@ -267,7 +267,7 @@ sequenceDiagram
 
 #### 📊 모델 재사용 검증
 
-<p align="center"><img src="docs/images/cards/eval.png" width="100%" alt="모델 재사용 검증"></p>
+<p align="center"><img src="docs/images/cards2/eval.png" width="100%" alt="모델 재사용 검증"></p>
 
 5일차 영상 12개(S02 검증용, S03 테스트용)를 서비스와 같은 코드로 분석했습니다(`ai_service/scripts/evaluate_videos.py`, 결과 [`docs/evaluation_S02_S03.txt`](docs/evaluation_S02_S03.txt)). 기준값은 **S02로만** 골랐고 S03은 마지막 확인에만 썼습니다. 틀린 답은 모두 1·2등 차이가 작아 "판단 보류"로 표시됐고, 확정한 답은 모두 맞았습니다. 효과가 없어 반영하지 않은 실험은 [`docs/inference_experiments.md`](docs/inference_experiments.md)에 있습니다.
 
@@ -275,36 +275,36 @@ sequenceDiagram
 
 과제가 요구하는 화면 4개(정상 분석·오류·관리자 화면·대시보드)에 "판단 보류" 1개를 더했습니다. 카드를 누르면 원본 캡처가 열립니다.
 
-<p align="center"><a href="docs/images/analysis.png"><img src="docs/images/cards/case1.png" width="100%" alt="정상 분석"></a></p>
-<p align="center"><a href="docs/images/failure.png"><img src="docs/images/cards/case2.png" width="100%" alt="오류·실패"></a></p>
-<p align="center"><a href="docs/images/admin_jobs.png"><img src="docs/images/cards/case3.png" width="100%" alt="관리자 화면"></a></p>
-<p align="center"><a href="docs/images/dashboard.png"><img src="docs/images/cards/case4.png" width="100%" alt="관리자 대시보드"></a></p>
-<p align="center"><a href="docs/images/uncertain.png"><img src="docs/images/cards/case5.png" width="100%" alt="판단 보류"></a></p>
+<p align="center"><a href="docs/images/shots/analysis.png"><img src="docs/images/cards2/case1.png" width="100%" alt="정상 분석"></a></p>
+<p align="center"><a href="docs/images/shots/failure.png"><img src="docs/images/cards2/case2.png" width="100%" alt="오류·실패"></a></p>
+<p align="center"><a href="docs/images/shots/admin_jobs.png"><img src="docs/images/cards2/case3.png" width="100%" alt="관리자 화면"></a></p>
+<p align="center"><a href="docs/images/shots/dashboard.png"><img src="docs/images/cards2/case4.png" width="100%" alt="관리자 대시보드"></a></p>
+<p align="center"><a href="docs/images/shots/uncertain.png"><img src="docs/images/cards2/case5.png" width="100%" alt="판단 보류"></a></p>
 
 > [!NOTE]
-> 캡처는 시연 PC(Windows + WSL2 Docker)에서 5개 서비스를 띄우고 찍었습니다. "판단 보류"만 같은 코드로 개발 환경에서 찍었습니다. 일반 회원이 `/admin/`에 들어가면 [접근이 막힙니다](docs/images/admin_denied.png).
+> 캡처는 모두 시연 PC(Windows + WSL2 Docker)에서 5개 서비스를 띄우고 찍었습니다. Django Admin의 [사람별 예측 목록](docs/images/shots/admin_predictions.png)에서도 두 사람 영상이 2줄로 저장된 것을 볼 수 있습니다. 일반 회원이 `/admin/`에 들어가면 [접근이 막힙니다](docs/images/shots/admin_denied.png).
 
 #### ✅ 기능 테스트 (T01~T10)
 
 <p align="center">
-<a href="docs/images/t01_health.png"><img src="docs/images/cards/t01.png" width="49%" alt="T01"></a>
-<a href="docs/images/analysis.png"><img src="docs/images/cards/t02.png" width="49%" alt="T02"></a>
+<a href="docs/images/t01_health.png"><img src="docs/images/cards2/t01.png" width="49%" alt="T01"></a>
+<a href="docs/images/shots/analysis.png"><img src="docs/images/cards2/t02.png" width="49%" alt="T02"></a>
 </p>
 <p align="center">
-<img src="docs/images/cards/t03.png" width="49%" alt="T03">
-<a href="docs/images/admin_predictions.png"><img src="docs/images/cards/t04.png" width="49%" alt="T04"></a>
+<img src="docs/images/cards2/t03.png" width="49%" alt="T03">
+<a href="docs/images/shots/two_people.png"><img src="docs/images/cards2/t04.png" width="49%" alt="T04"></a>
 </p>
 <p align="center">
-<a href="docs/images/t05_async.png"><img src="docs/images/cards/t05.png" width="49%" alt="T05"></a>
-<a href="docs/images/history.png"><img src="docs/images/cards/t06.png" width="49%" alt="T06"></a>
+<a href="docs/images/shots/async.png"><img src="docs/images/cards2/t05.png" width="49%" alt="T05"></a>
+<a href="docs/images/shots/history.png"><img src="docs/images/cards2/t06.png" width="49%" alt="T06"></a>
 </p>
 <p align="center">
-<a href="docs/images/t07_forbidden.png"><img src="docs/images/cards/t07.png" width="49%" alt="T07"></a>
-<a href="docs/images/dashboard.png"><img src="docs/images/cards/t08.png" width="49%" alt="T08"></a>
+<a href="docs/images/t07_forbidden.png"><img src="docs/images/cards2/t07.png" width="49%" alt="T07"></a>
+<a href="docs/images/shots/dashboard.png"><img src="docs/images/cards2/t08.png" width="49%" alt="T08"></a>
 </p>
 <p align="center">
-<a href="docs/images/failure.png"><img src="docs/images/cards/t09.png" width="49%" alt="T09"></a>
-<a href="docs/images/t10_restart.png"><img src="docs/images/cards/t10.png" width="49%" alt="T10"></a>
+<a href="docs/images/shots/failure.png"><img src="docs/images/cards2/t09.png" width="49%" alt="T09"></a>
+<a href="docs/images/shots/restart.png"><img src="docs/images/cards2/t10.png" width="49%" alt="T10"></a>
 </p>
 
 ## 8. 교재와 다르게 구현한 점과 이유
