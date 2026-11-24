@@ -8,7 +8,7 @@ from pathlib import Path
 from django.conf import settings
 from rest_framework import serializers
 
-from .models import AnalysisJob, PersonPrediction
+from .models import ACTION_LABELS, CAMERA_TITLE_PREFIX, AnalysisJob, PersonPrediction
 
 ALLOWED_VIDEO_SUFFIXES = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 
@@ -79,11 +79,13 @@ class AnalysisJobSerializer(serializers.ModelSerializer):
 
 
 def default_title(attrs):
-    """제목을 비워 두면 업로드한 영상 파일 이름(또는 카메라 번호)을 제목으로 씁니다."""
+    """제목을 비워 두면 영상 파일 이름(또는 카메라 번호)에 고른 동작을 괄호로 붙여 제목으로 씁니다.
+    동작을 고르지 않았으면 분석이 끝난 뒤 예측한 동작을 붙입니다(tasks.py)."""
     video = attrs.get("video")
-    if video is not None:
-        return Path(video.name).name[:100]
-    return f"IP Webcam · 카메라 {attrs.get('camera_index', 0) + 1}"
+    base = Path(video.name).name if video is not None else f"{CAMERA_TITLE_PREFIX} {attrs.get('camera_index', 0) + 1}"
+    expected = attrs.get("expected_action")
+    title = f"{base} ({ACTION_LABELS[expected]})" if expected in ACTION_LABELS else base
+    return title[:100]
 
 
 class AnalysisJobUpdateSerializer(serializers.ModelSerializer):

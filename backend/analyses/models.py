@@ -15,6 +15,20 @@ ACTION_CHOICES = [
     ("wave", "손 흔들기"),
 ]
 ACTION_LABELS = dict(ACTION_CHOICES)
+VIDEO_SUFFIXES = (".mp4", ".avi", ".mov", ".mkv", ".webm")
+CAMERA_TITLE_PREFIX = "IP Webcam · 카메라"
+
+
+def is_default_title(title):
+    """사용자가 직접 적지 않은 기본 제목(파일 이름 또는 카메라 번호)인지 확인합니다."""
+    return title.lower().endswith(VIDEO_SUFFIXES) or (title.startswith(CAMERA_TITLE_PREFIX) and "(" not in title)
+
+
+def label_text(action_label):
+    """예측 Label을 화면용 한글 이름으로 바꿉니다."""
+    if action_label in ACTION_LABELS:
+        return ACTION_LABELS[action_label]
+    return "판단 보류" if action_label == "UNCERTAIN" else "인식 불가"
 
 
 class AnalysisJob(models.Model):

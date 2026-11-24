@@ -8,7 +8,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .camera_capture import CameraError, capture_clip
-from .models import AnalysisJob, PersonPrediction
+from .models import AnalysisJob, PersonPrediction, is_default_title, label_text
 from .services import AIServiceError, AIServiceUnavailable, predict_video
 
 logger = logging.getLogger(__name__)
@@ -88,6 +88,8 @@ def run_analysis(self, job_id: int) -> dict:
             )
             for p in result.get("predictions", [])
         ])
+        if is_default_title(job.title):
+            job.title = title_with_prediction(job.title, result.get("predictions", []))
         job.status = AnalysisJob.Status.SUCCESS
         job.result_message = (result.get("message") or "")[:255]
         job.error_message = ""
@@ -99,3 +101,11 @@ def run_analysis(self, job_id: int) -> dict:
         job.completed_at = timezone.now()
         job.save()
     return {"job_id": job_id, "status": "SUCCESS", "people": len(result.get("predictions", []))}
+
+
+def title_with_prediction(title, predictions):
+    """기본 제목 뒤에 예측한 동작을 괄호로 붙입니다. 여러 명이면 Confidence가 가장 높은 사람 기준."""
+    if not predictions:
+        return f"{title} (사람 없음)"[:100]
+    top = max(predictions, key=lambda p: p.get("confidence", 0.0))
+    return f"{title} ({label_text(top['action_label'])})"[:100]

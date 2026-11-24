@@ -11,7 +11,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import AnalysisJob, PersonPrediction
+from .models import AnalysisJob, PersonPrediction, label_text
 from .services import AIServiceError
 from .tasks import run_analysis
 
@@ -78,6 +78,15 @@ class AnalysisApiTests(TestCase):
         job = AnalysisJob.objects.get(pk=r.json()["id"])
         self.assertEqual(job.title, video_file().name)
 
+    @mock.patch("analyses.views.run_analysis.delay")
+    def test_empty_title_adds_selected_action(self, delay):
+        delay.return_value.id = "task-2"
+        self.client.force_login(self.a)
+        with self.captureOnCommitCallbacks(execute=True):
+            r = self.client.post("/api/analyses/", {"input_type": "upload", "video": video_file(), "expected_action": "wave"})
+        job = AnalysisJob.objects.get(pk=r.json()["id"])
+        self.assertEqual(job.title, f"{video_file().name} (손 흔들기)")
+
     def test_upload_requires_video_and_valid_extension(self):
         self.client.force_login(self.a)
         self.assertEqual(self.client.post("/api/analyses/", {"input_type": "upload"}).status_code, 400)
@@ -108,6 +117,14 @@ class AnalysisApiTests(TestCase):
         self.assertEqual(details["window_agreement"], 0.67)
         self.assertEqual(details["timeline"][0]["label"], "bend_return")
         self.assertEqual(body["predictions"][1]["details"], {})
+
+    @mock.patch("analyses.tasks.predict_video", return_value=FAKE_RESULT)
+    def test_default_title_gets_predicted_action(self, _):
+        job = self.create_job(self.a, title="clip.mp4")
+        run_analysis.apply(args=[job.pk])
+        job.refresh_from_db()
+        top = max(FAKE_RESULT["predictions"], key=lambda p: p["confidence"])["action_label"]
+        self.assertEqual(job.title, f"clip.mp4 ({label_text(top)})")
 
     # T09: 잘못된 파일 → 실패 상태와 사유 저장
     @mock.patch("analyses.tasks.predict_video", side_effect=AIServiceError("영상을 열 수 없습니다."))
