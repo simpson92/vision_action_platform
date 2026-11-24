@@ -137,7 +137,7 @@ class AnalysisApiTests(TestCase):
 
     @mock.patch("analyses.tasks.capture_clip", side_effect=__import__("analyses.camera_capture", fromlist=["CameraError"]).CameraError("카메라에 연결하지 못했습니다."))
     def test_camera_failure_is_saved(self, _):
-        job = AnalysisJob.objects.create(user=self.a, input_type="ip_webcam", camera_index=0, capture_seconds=8)
+        job = AnalysisJob.objects.create(user=self.a, input_type="ip_webcam", camera_index=0, capture_seconds=5)
         run_analysis.apply(args=[job.pk])
         job.refresh_from_db()
         self.assertEqual(job.status, "FAILURE")

@@ -6,7 +6,7 @@
 
 Vision Action Platform은 영상 속 사람의 동작을 AI로 인식하는 웹 서비스입니다. 동작 인식 모델을 스크립트로 돌릴 필요 없이, 브라우저에서 분석을 요청하고 결과를 기록으로 남길 수 있습니다.
 
-<p align="center"><img src="docs/images/overview_calm.svg" width="100%" alt="입력 → 결과 → 관리"></p>
+<p align="center"><img src="docs/images/overview_calm2.svg" width="100%" alt="입력 → 결과 → 관리"></p>
 
 <p align="center">
 <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django"> <img src="https://img.shields.io/badge/DRF-A30000?style=for-the-badge&logo=django&logoColor=white" alt="DRF"> <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"><br>
@@ -92,7 +92,7 @@ docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테
 
 ## 3. 전체 아키텍처
 
-<p align="center"><img src="docs/images/architecture_calm.svg" width="100%" alt="전체 아키텍처"></p>
+<p align="center"><img src="docs/images/architecture_calm2.svg" width="100%" alt="전체 아키텍처"></p>
 
 `compose.yaml`이 서비스 5개를 띄웁니다. 밖으로 열린 문은 **django(8000) 하나**이고, 서비스끼리는 `localhost`가 아니라 서비스 이름(`fastapi`, `redis`, `postgres`)으로 대화합니다.
 
@@ -169,7 +169,7 @@ erDiagram
 
 ## 5. AI 추론 버튼 구현 흐름
 
-<p align="center"><img src="docs/images/ai_flow_icons_calm.svg" width="100%" alt="AI 추론 버튼 흐름"></p>
+<p align="center"><img src="docs/images/ai_flow_icons_calm2.svg" width="100%" alt="AI 추론 버튼 흐름"></p>
 
 **AI 분석 시작** 버튼을 누르면 웹 서버는 분석을 기다리지 않고 작업 ID부터 돌려줍니다(②). 무거운 추론은 Celery가 뒤에서 처리하고(③~⑥), 화면은 상태를 주기적으로 물어 결과를 받아 그립니다(⑦).
 
@@ -205,7 +205,7 @@ sequenceDiagram
     R->>T: 작업 전달
     T->>DB: STARTED
     opt IP Webcam
-        T->>T: camera_capture.py 8초 수집 → MP4
+        T->>T: camera_capture.py 5초 수집 → MP4
     end
     T->>F: POST /predict/video (영상)
     F->>AI: Pose·ByteTrack → 38-D Feature → 30 Step → RandomForest
@@ -223,7 +223,7 @@ sequenceDiagram
 
 ## 6. 사용한 모델과 입력 형식
 
-<p align="center"><img src="docs/images/model_pipeline_calm.svg" width="100%" alt="모델 파이프라인과 지원 동작"></p>
+<p align="center"><img src="docs/images/model_pipeline_calm2.svg" width="100%" alt="모델 파이프라인과 지원 동작"></p>
 
 영상에서 사람마다 관절 17개를 찾고(YOLO11 Pose), 30 Step 동안의 움직임을 1,140개 숫자로 바꾼 뒤 Random Forest가 6개 동작 중 하나로 분류합니다. 모델 파일은 모두 `ai_service/models/`에 있습니다.
 
@@ -239,7 +239,7 @@ sequenceDiagram
 | `src/sequence_utils.py` | Frame들을 30 Step으로 맞추고 1줄로 펼치기 | `services/action_inference.py` |
 
 - 📹 **업로드:** MP4 등 영상, 최대 50MB. 전신이 보이는 3~10초 영상이 가장 잘 맞습니다.
-- 📱 **IP Webcam:** `.env`의 `IP_WEBCAM_ALLOWED_URLS`에 등록한 카메라만, **8초** 수집합니다.
+- 📱 **IP Webcam:** `.env`의 `IP_WEBCAM_ALLOWED_URLS`에 등록한 카메라만, **5초** 수집합니다.
 
 #### ⚡ FastAPI가 받는 것과 돌려주는 것
 
@@ -302,7 +302,7 @@ sequenceDiagram
 <a href="docs/images/shots/analysis.png"><img src="docs/images/cards2/t02.png" width="49%" alt="T02"></a>
 </p>
 <p align="center">
-<img src="docs/images/cards2/t03.png" width="49%" alt="T03">
+<img src="docs/images/cards2/t03_v2.png" width="49%" alt="T03">
 <a href="docs/images/shots/two_people.png"><img src="docs/images/cards2/t04.png" width="49%" alt="T04"></a>
 </p>
 <p align="center">

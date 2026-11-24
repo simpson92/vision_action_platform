@@ -20,7 +20,7 @@
     <text y="-46" text-anchor="middle" font-size="14" fill="#4a86c5" letter-spacing="3">STEP 1</text>
     <text y="-14" text-anchor="middle" font-size="28" font-weight="700" fill="#1f3550">입력</text>
     <text y="22" text-anchor="middle" font-size="16" fill="#475d78">MP4 영상 업로드</text>
-    <text y="46" text-anchor="middle" font-size="16" fill="#475d78">IP Webcam 8초 촬영</text>
+    <text y="46" text-anchor="middle" font-size="16" fill="#475d78">IP Webcam 5초 촬영</text>
   </g>
   <!-- 결과 -->
   <g transform="translate(480,150)">

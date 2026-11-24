@@ -66,7 +66,7 @@
   </g>
   <text x="294" y="212" font-size="9" fill="#7a8ca2" text-anchor="middle">파일</text>
   <text x="466" y="212" font-size="9" fill="#7a8ca2" text-anchor="middle">읽기</text>
-  <text x="556" y="120" font-size="9.5" fill="#7a8ca2">8초 수집</text>
+  <text x="556" y="120" font-size="9.5" fill="#7a8ca2">5초 수집</text>
 
   <g font-size="10.5" fill="#2e4560">
     <line x1="20" y1="392" x2="740" y2="392" stroke="#d8e1ea"/>
