@@ -84,7 +84,7 @@ docker compose exec django python manage.py createsuperuser
 <summary>🧪 테스트 실행</summary>
 
 ```bash
-docker compose exec django python manage.py test           # 웹·권한·Celery 저장 23개
+docker compose exec django python manage.py test           # 웹·권한·Celery 저장 24개
 docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테스트 영상이 있으면 실제 추론까지)
 ```
 
