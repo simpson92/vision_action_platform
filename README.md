@@ -344,7 +344,8 @@ sequenceDiagram
 - 보인 문제: 같은 S03 영상인데 정확도가 떨어짐
 - 확인한 곳: 학습 스크립트 `34_build_sequence_dataset.py` — Clip 전체를 30 Step으로 리샘플링
 - 원인: 긴 영상(5초 초과)은 Window로만 예측해 학습 때와 입력 구간이 달랐음
-- 바꾼 것: 학습과 같은 "전체 구간" 예측을 항상 포함하고 Window 평균과 섞음 → S03 5/6, S02 4/6
+- 바꾼 것: 학습과 같은 "전체 구간" 예측을 항상 포함하고 Window 평균과 섞음
+- 확인: 같은 영상 12개를 다시 분석해 S03 5/6, S02 4/6으로 올라감 (`docs/evaluation_S02_S03.txt`)
 
 **3) 원본 `src/common.py`가 설정 파일을 못 찾음**
 - 원본은 `configs/project.json`, 새 구조는 `ai_service/project.json` → `CONFIG_PATH` 수정
@@ -359,11 +360,13 @@ sequenceDiagram
 - 확인한 곳: `docker compose logs fastapi` → `import cv2`에서 실패
 - 원인: `ultralytics`가 의존성으로 화면용 `opencv-python`을 설치해 `opencv-python-headless`를 덮어씀. slim 이미지에는 화면 라이브러리(libxcb·libGL)가 없음
 - 바꾼 것: `ai_service/Dockerfile`에서 두 opencv를 지우고 headless판만 다시 설치 (apt로 화면 라이브러리를 까는 것보다 이미지가 작음)
+- 확인: `docker compose up -d --build fastapi` 후 `docker compose ps`에서 fastapi가 재시작 없이 Up으로 유지되고, `GET /health`가 모델 준비 완료를 돌려줌
 
 **7) Docker에서 분석 요청 시 `AI 서버 오류 HTTP 500` (`operator torchvision::nms does not exist`)**
 - 확인한 곳: `docker compose logs fastapi` → YOLO warmup 중 `import torchvision`에서 실패
 - 원인: torch는 CPU 전용 저장소에서, torchvision은 ultralytics 의존성으로 PyPI에서 따로 설치돼 서로 다른 torch 판으로 빌드된 짝이 됨
 - 바꾼 것: Dockerfile에서 torch와 torchvision을 같은 CPU 저장소에서 함께 설치
+- 확인: 다시 빌드한 뒤 로그에 오류가 없고, 같은 영상으로 분석하니 HTTP 500 대신 SUCCESS로 끝나 결과 카드가 나옴
 
 </details>
 
