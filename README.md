@@ -18,46 +18,77 @@ Vision Action Platform은 영상 속 사람의 동작을 AI로 인식하는 웹 
 
 ## 2. 실행 방법
 
-준비물: Docker Desktop(WSL2 연동), Git
+<p align="center"><img src="docs/images/run_steps.svg" width="100%" alt="저장소 받기 → 모델 확인 → 실행 → 관리자 계정 → 접속"></p>
+
+**준비물** &nbsp; <img src="https://img.shields.io/badge/Docker_Desktop-WSL2-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Desktop"> <img src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white" alt="Git">
+
+#### 1️⃣ 저장소 받기 · `.env` 만들기
 
 ```bash
 git clone https://github.com/simpson92/vision_action_platform.git
 cd vision_action_platform
-cp .env.example .env          # 비밀번호·IP Webcam 주소 등 수정
+cp .env.example .env
 ```
 
-모델 파일은 저장소에 포함돼 있습니다(`ai_service/models/`, 총 약 6.6MB). 서버가 시작할 때 `SHA256SUMS.txt`로 해시를 확인한 뒤에만 불러옵니다.
+`.env`에서 비밀번호와 IP Webcam 주소만 바꾸면 됩니다. `.env`는 Git에 올라가지 않습니다.
+
+#### 2️⃣ 모델 파일 확인
+
+모델은 저장소에 함께 들어 있어서 따로 받을 필요가 없습니다(`ai_service/models/`, 약 6.6MB).
+
+<details>
+<summary>파일 목록 보기</summary>
 
 ```text
 ai_service/models/
-├── rf_action_baseline.joblib   # 6일차 Random Forest (300 trees, 입력 1,140)
+├── rf_action_baseline.joblib   # Random Forest (300 trees, 입력 1,140)
 ├── rf_feature_columns.json     # 1,140개 Feature 이름과 순서
 ├── rf_training_info.json       # 6 Class, 30 Step, min_valid_frames 10
-├── yolo11n-pose.pt             # 6~8일차 YOLO Pose 가중치
+├── yolo11n-pose.pt             # YOLO Pose 가중치
 └── SHA256SUMS.txt
 ```
 
+</details>
+
+> [!NOTE]
+> AI 서버는 시작할 때 `SHA256SUMS.txt`로 파일이 바뀌지 않았는지 확인한 뒤에만 모델을 불러옵니다.
+
+#### 3️⃣ 실행
+
 ```bash
-docker compose up --build -d          # 5개 서비스 실행 (마이그레이션은 django 시작 시 자동)
-docker compose ps                     # 모두 running/healthy 확인
-docker compose exec django python manage.py createsuperuser   # .env에 DJANGO_SUPERUSER_* 를 채웠다면 생략
+docker compose up --build -d
+docker compose ps
 ```
 
-마이그레이션을 직접 하려면 `docker compose exec django python manage.py migrate`.
+5개 서비스가 모두 `running`/`healthy`면 준비 완료입니다. **마이그레이션은 django가 시작할 때 자동으로 적용**됩니다. 직접 하려면 `docker compose exec django python manage.py migrate`를 실행합니다.
 
-| 화면 | 주소 |
-|---|---|
-| 사용자 화면 (회원가입 → AI 분석) | http://localhost:8000/ |
-| Django Admin | http://localhost:8000/admin/ |
-| 관리자 대시보드 | http://localhost:8000/dashboard/ |
-| FastAPI 문서 (개발·시연용) | http://localhost:8001/docs |
+#### 4️⃣ 관리자 계정 만들기
 
-테스트:
+```bash
+docker compose exec django python manage.py createsuperuser
+```
+
+> [!TIP]
+> `.env`에 `DJANGO_SUPERUSER_*` 값을 채워 두면 처음 실행할 때 관리자 계정이 자동으로 만들어져서 이 단계를 건너뛸 수 있습니다.
+
+#### 5️⃣ 접속
+
+| | 화면 | 주소 |
+|:---:|---|---|
+| 🙋 | 사용자 화면 (회원가입 → AI 분석) | http://localhost:8000/ |
+| 🛠️ | Django Admin | http://localhost:8000/admin/ |
+| 📊 | 관리자 대시보드 | http://localhost:8000/dashboard/ |
+| ⚡ | FastAPI 문서 (개발용) | http://localhost:8001/docs |
+
+<details>
+<summary>🧪 테스트 실행</summary>
 
 ```bash
 docker compose exec django python manage.py test           # 웹·권한·Celery 저장 16개
 docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테스트 영상이 있으면 실제 추론까지)
 ```
+
+</details>
 
 ## 3. 전체 아키텍처
 

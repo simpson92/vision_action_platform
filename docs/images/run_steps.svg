@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="130" viewBox="0 0 960 130" font-family="'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#070d1f"/><stop offset="1" stop-color="#0c1836"/></linearGradient></defs>
+<rect width="960" height="130" rx="16" fill="url(#bg)"/>
+<rect x="16.0" y="25" width="166" height="80" rx="40" fill="#4da3ff" fill-opacity="0.14" stroke="#4da3ff" stroke-width="2"/>
+<circle cx="48.0" cy="65" r="18" fill="#4da3ff"/><text x="48.0" y="72" text-anchor="middle" font-size="18" font-weight="700" fill="#0a1024">1</text>
+<text x="74.0" y="62" font-size="15" font-weight="700" fill="#ffffff">저장소 받기</text>
+<text x="74.0" y="82" font-size="11" fill="#c9d6ff">clone · .env 복사</text>
+<path d="M186.0 65 l12.5 0" stroke="#4da3ff" stroke-width="2" stroke-dasharray="3 3"/><path d="M196.5 60 l5 5 l-5 5" fill="none" stroke="#4da3ff" stroke-width="2"/>
+<rect x="206.5" y="25" width="166" height="80" rx="40" fill="#6f8dff" fill-opacity="0.14" stroke="#6f8dff" stroke-width="2"/>
+<circle cx="238.5" cy="65" r="18" fill="#6f8dff"/><text x="238.5" y="72" text-anchor="middle" font-size="18" font-weight="700" fill="#0a1024">2</text>
+<text x="264.5" y="62" font-size="15" font-weight="700" fill="#ffffff">모델 확인</text>
+<text x="264.5" y="82" font-size="11" fill="#c9d6ff">models/ 5개 파일</text>
+<path d="M376.5 65 l12.5 0" stroke="#6f8dff" stroke-width="2" stroke-dasharray="3 3"/><path d="M387.0 60 l5 5 l-5 5" fill="none" stroke="#6f8dff" stroke-width="2"/>
+<rect x="397.0" y="25" width="166" height="80" rx="40" fill="#8a7cff" fill-opacity="0.14" stroke="#8a7cff" stroke-width="2"/>
+<circle cx="429.0" cy="65" r="18" fill="#8a7cff"/><text x="429.0" y="72" text-anchor="middle" font-size="18" font-weight="700" fill="#0a1024">3</text>
+<text x="455.0" y="62" font-size="15" font-weight="700" fill="#ffffff">실행</text>
+<text x="455.0" y="82" font-size="11" fill="#c9d6ff">up --build</text>
+<path d="M567.0 65 l12.5 0" stroke="#8a7cff" stroke-width="2" stroke-dasharray="3 3"/><path d="M577.5 60 l5 5 l-5 5" fill="none" stroke="#8a7cff" stroke-width="2"/>
+<rect x="587.5" y="25" width="166" height="80" rx="40" fill="#a46cff" fill-opacity="0.14" stroke="#a46cff" stroke-width="2"/>
+<circle cx="619.5" cy="65" r="18" fill="#a46cff"/><text x="619.5" y="72" text-anchor="middle" font-size="18" font-weight="700" fill="#0a1024">4</text>
+<text x="645.5" y="62" font-size="15" font-weight="700" fill="#ffffff">관리자 계정</text>
+<text x="645.5" y="82" font-size="11" fill="#c9d6ff">createsuperuser</text>
+<path d="M757.5 65 l12.5 0" stroke="#a46cff" stroke-width="2" stroke-dasharray="3 3"/><path d="M768.0 60 l5 5 l-5 5" fill="none" stroke="#a46cff" stroke-width="2"/>
+<rect x="778.0" y="25" width="166" height="80" rx="40" fill="#c25cff" fill-opacity="0.14" stroke="#c25cff" stroke-width="2"/>
+<circle cx="810.0" cy="65" r="18" fill="#c25cff"/><text x="810.0" y="72" text-anchor="middle" font-size="18" font-weight="700" fill="#0a1024">5</text>
+<text x="836.0" y="62" font-size="15" font-weight="700" fill="#ffffff">접속</text>
+<text x="836.0" y="82" font-size="11" fill="#c9d6ff">localhost:8000</text>
+</svg>
