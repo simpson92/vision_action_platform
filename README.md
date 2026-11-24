@@ -6,7 +6,7 @@
 
 Vision Action Platform은 영상 속 사람의 동작을 AI로 인식하는 웹 서비스입니다. 동작 인식 모델을 스크립트로 돌릴 필요 없이, 브라우저에서 분석을 요청하고 결과를 기록으로 남길 수 있습니다.
 
-<p align="center"><img src="docs/images/overview.svg" width="100%" alt="입력 → 결과 → 관리"></p>
+<p align="center"><img src="docs/images/overview_light.svg" width="100%" alt="입력 → 결과 → 관리"></p>
 
 <p align="center">
 <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django"> <img src="https://img.shields.io/badge/DRF-A30000?style=for-the-badge&logo=django&logoColor=white" alt="DRF"> <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"><br>
@@ -18,7 +18,7 @@ Vision Action Platform은 영상 속 사람의 동작을 AI로 인식하는 웹 
 
 ## 2. 실행 방법
 
-<p align="center"><img src="docs/images/run_steps.svg" width="100%" alt="저장소 받기 → 모델 확인 → 실행 → 관리자 계정 → 접속"></p>
+<p align="center"><img src="docs/images/run_steps_light.svg" width="100%" alt="저장소 받기 → 모델 확인 → 실행 → 관리자 계정 → 접속"></p>
 
 **준비물** &nbsp; <img src="https://img.shields.io/badge/Docker_Desktop-WSL2-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Desktop"> <img src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white" alt="Git">
 
@@ -92,27 +92,27 @@ docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테
 
 ## 3. 전체 아키텍처
 
-<p align="center"><img src="docs/images/architecture.svg" width="100%" alt="전체 아키텍처"></p>
+<p align="center"><img src="docs/images/architecture_light.svg" width="100%" alt="전체 아키텍처"></p>
 
 `compose.yaml`이 서비스 5개를 띄웁니다. 밖으로 열린 문은 **django(8000) 하나**이고, 서비스끼리는 `localhost`가 아니라 서비스 이름(`fastapi`, `redis`, `postgres`)으로 대화합니다.
 
-| | 서비스 | 하는 일 | 하지 않는 일 |
-|:---:|---|---|---|
-| 🟢 | **django** | 회원, 분석 요청 CRUD, 권한, 화면, Admin, 대시보드 집계 | AI 추론, 모델 학습 |
-| 🔴 | **redis** | Celery 메시지 브로커 | 업무 데이터 영구 저장 |
-| 🟠 | **celery** | 영상 확보(업로드 파일 / IP Webcam 수집), FastAPI 호출, 결과 저장, 재시도 | 화면 렌더링 |
-| 🔵 | **fastapi** | 영상 → Pose·Tracking → Feature → Random Forest → JSON | DB·ORM·회원 관리 |
-| 🟣 | **postgres** | 사용자·작업·사람별 예측 영구 저장 (`postgres_data` 볼륨) | — |
+| 서비스 | 하는 일 | 하지 않는 일 |
+|---|---|---|
+| **django** | 회원, 분석 요청 CRUD, 권한, 화면, Admin, 대시보드 집계 | AI 추론, 모델 학습 |
+| **redis** | Celery 메시지 브로커 | 업무 데이터 영구 저장 |
+| **celery** | 영상 확보(업로드 파일 / IP Webcam 수집), FastAPI 호출, 결과 저장, 재시도 | 화면 렌더링 |
+| **fastapi** | 영상 → Pose·Tracking → Feature → Random Forest → JSON | DB·ORM·회원 관리 |
+| **postgres** | 사용자·작업·사람별 예측 영구 저장 (`postgres_data` 볼륨) | — |
 
 ## 4. DB 설계 (ERD)
 
-<p align="center"><img src="docs/images/erd.svg" width="100%" alt="ERD"></p>
+<p align="center"><img src="docs/images/erd_light.svg" width="100%" alt="ERD"></p>
 
 📁 직접 작성한 모델은 [`backend/analyses/models.py`](backend/analyses/models.py)에 있습니다. `auth_user`는 Django 기본 테이블입니다.
 
-- 🟢 **auth_user**: 회원 아이디, 비밀번호 해시, 관리자 여부
-- 🟠 **AnalysisJob**: 분석 요청 1건. 누가, 어떤 입력으로 요청했고 지금 어떤 상태인지
-- 🔵 **PersonPrediction**: 그 작업에 나온 사람 1명의 예측과 판단 근거. 두 사람이 나오면 2행
+- **auth_user**: 회원 아이디, 비밀번호 해시, 관리자 여부
+- **AnalysisJob**: 분석 요청 1건. 누가, 어떤 입력으로 요청했고 지금 어떤 상태인지
+- **PersonPrediction**: 그 작업에 나온 사람 1명의 예측과 판단 근거. 두 사람이 나오면 2행
 
 > [!NOTE]
 > 영상 파일은 DB가 아니라 Media 볼륨에 두고 경로만 저장합니다. IP Webcam 주소도 DB에 남기지 않고 카메라 번호만 저장합니다.
@@ -169,7 +169,7 @@ erDiagram
 
 ## 5. AI 추론 버튼 구현 흐름
 
-<p align="center"><img src="docs/images/ai_flow_icons.svg" width="100%" alt="AI 추론 버튼 흐름"></p>
+<p align="center"><img src="docs/images/ai_flow_icons_light.svg" width="100%" alt="AI 추론 버튼 흐름"></p>
 
 **AI 분석 시작** 버튼을 누르면 웹 서버는 분석을 기다리지 않고 작업 ID부터 돌려줍니다(②). 무거운 추론은 Celery가 뒤에서 처리하고(③~⑥), 화면은 상태를 주기적으로 물어 결과를 받아 그립니다(⑦).
 
@@ -223,7 +223,7 @@ sequenceDiagram
 
 ## 6. 사용한 모델과 입력 형식
 
-<p align="center"><img src="docs/images/model_pipeline.svg" width="100%" alt="모델 파이프라인과 지원 동작"></p>
+<p align="center"><img src="docs/images/model_pipeline_light.svg" width="100%" alt="모델 파이프라인과 지원 동작"></p>
 
 영상에서 사람마다 관절 17개를 찾고(YOLO11 Pose), 30 Step 동안의 움직임을 1,140개 숫자로 바꾼 뒤 Random Forest가 6개 동작 중 하나로 분류합니다. 모델 파일은 모두 `ai_service/models/`에 있습니다.
 
