@@ -25,21 +25,25 @@
   const isDecided = (label) => label !== "UNCERTAIN" && label !== "INSUFFICIENT_INPUT";
   const pct = (v, digits = 1) => `${(v * 100).toFixed(digits)}%`;
 
-  // ---- 색: CSS 변수에서 읽어 Chart.js와 맞춤 ----
-  const css = getComputedStyle(document.documentElement);
-  const C = Object.fromEntries(["--primary", "--primary2", "--muted", "--line2", "--ok", "--warn", "--bad", "--text", "--card"]
-    .map((n) => [n.slice(2), css.getPropertyValue(n).trim()]));
+  // ---- 색: CSS 변수에서 읽어 Chart.js와 맞춤 (다크/라이트 전환 때 다시 읽음) ----
+  const C = {};
   const hasChart = typeof Chart !== "undefined";
-  if (hasChart) {
-    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
-    Chart.defaults.color = C.muted;
-    Chart.defaults.borderColor = C.line2;
+  function readColors() {
+    const css = getComputedStyle(document.documentElement);
+    ["--primary", "--primary2", "--muted", "--line2", "--ok", "--warn", "--bad", "--text", "--card"]
+      .forEach((n) => (C[n.slice(2)] = css.getPropertyValue(n).trim()));
+    if (hasChart) {
+      Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+      Chart.defaults.color = C.muted;
+      Chart.defaults.borderColor = C.line2;
+    }
   }
+  readColors();
 
   // ---- 지금 보고 있는 영상 한 건: 상단 지표 4개 + 그래프 2개 ----
   // 데이터는 그 작업의 status API 응답(사람별 details: 구간별 확률, 일치율, 관절 인식)에서 바로 가져옵니다.
   const ACTION_KEYS = Object.keys(EXPECTED);
-  const LINE_COLORS = [C.primary, C.primary2, "#60a5fa", C.warn, C.ok, "#22d3ee"];
+  const lineColor = (i) => [C.primary, C.primary2, "#60a5fa", C.warn, C.ok, "#22d3ee"][i];
   const charts = {};
   let focusJob = null;
   let focusTrack = null;
@@ -148,7 +152,7 @@
         labels: timeline.map((w) => `${w.start_sec.toFixed(1)}~${w.end_sec.toFixed(1)}초`),
         datasets: [
           ...order.map((key) => {
-            const color = LINE_COLORS[ACTION_KEYS.indexOf(key)];
+            const color = lineColor(ACTION_KEYS.indexOf(key));
             const main = key === top;
             return { label: LABELS[key], data: timeline.map((w) => +((w.probabilities[key] || 0) * 100).toFixed(1)),
               borderColor: color, backgroundColor: main ? color + "22" : color, fill: main, tension: 0.3,
@@ -195,13 +199,13 @@
       const res = await fetch(`/api/analyses/${id}/status/`, { credentials: "same-origin" });
       if (!res.ok) return;
       const job = await res.json();
-      clearTimeout(timer);
+      activeId = id;
       document.getElementById("result-empty").hidden = true;
       document.getElementById("result-body").hidden = false;
       document.getElementById("result-error").hidden = true;
       document.getElementById("detail-link").href = `/analyses/${id}/`;
       render(job);
-      if (!job.is_finished) poll(id, 0);
+      if (!job.is_finished && !timers[id]) poll(id, 0);
     } catch (_) { /* 무시: 다음 클릭에서 다시 시도 */ }
   }
   document.getElementById("people").addEventListener("click", (event) => {
@@ -368,7 +372,7 @@
       });
       const body = await res.json();
       if (!res.ok) throw new Error(flattenErrors(body));
-      startTracking(body.id, body.user_seq, data.get("expected_action") || "");
+      startTracking(body.id, body.user_seq, data.get("expected_action") || "", data.get("title") || "");
     } catch (err) {
       showFormError(err.message || "요청에 실패했습니다.");
     } finally {
@@ -389,36 +393,108 @@
   }
 
   // ---- 상태 조회 (HTTP Polling) ----
-  let timer = null;
-  function startTracking(id, seq, expected) {
-    clearTimeout(timer);
-    document.getElementById("result-empty").hidden = true;
-    document.getElementById("result-body").hidden = false;
-    document.getElementById("people").innerHTML = "";
-    document.getElementById("result-error").hidden = true;
-    document.getElementById("job-metrics").hidden = true;
-    document.getElementById("detail-link").href = `/analyses/${id}/`;
-    setSteps("PENDING");
-    if (inputType.value === "ip_webcam") startPreview();
-    document.getElementById("result-meta").textContent = `작업 #${seq ?? id} 등록됨`;
-    upsertHistory({ id, user_seq: seq, status: "PENDING", status_display: "대기", predictions: [], expected_action: expected });
+  // 여러 작업을 동시에 지켜볼 수 있게 작업마다 따로 조회합니다. 위 결과 카드에는 activeId 작업만 그립니다.
+  let activeId = null;
+  const timers = {};
+  const watching = new Set(); // 이 화면에서 등록해 끝나기를 기다리는 작업 (끝나면 알림)
+  function startTracking(id, seq, expected, title, focus = true) {
+    watching.add(id);
+    upsertHistory({ id, user_seq: seq, title: title || "", status: "PENDING", status_display: "대기", predictions: [], expected_action: expected });
+    if (focus) {
+      activeId = id;
+      document.getElementById("result-empty").hidden = true;
+      document.getElementById("result-body").hidden = false;
+      document.getElementById("people").innerHTML = "";
+      document.getElementById("result-error").hidden = true;
+      document.getElementById("job-metrics").hidden = true;
+      document.getElementById("detail-link").href = `/analyses/${id}/`;
+      setSteps("PENDING");
+      if (inputType.value === "ip_webcam") startPreview();
+      document.getElementById("result-meta").textContent = `작업 #${seq ?? id} 등록됨`;
+    }
     poll(id, 0);
   }
 
   async function poll(id, attempt) {
+    clearTimeout(timers[id]);
     try {
       const res = await fetch(`/api/analyses/${id}/status/`, { credentials: "same-origin" });
+      if (res.status === 404) { delete timers[id]; watching.delete(id); return; } // 그 사이 삭제됨
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const job = await res.json();
-      render(job);
+      if (id === activeId) render(job);
       upsertHistory(job);
-      if (job.is_finished) return;
+      if (job.is_finished) {
+        delete timers[id];
+        if (watching.delete(id)) notifyDone(job);
+        return;
+      }
     } catch (err) {
-      document.getElementById("result-meta").textContent = `상태 조회 실패, 다시 시도 중… (${err.message})`;
+      if (id === activeId) document.getElementById("result-meta").textContent = `상태 조회 실패, 다시 시도 중… (${err.message})`;
     }
     const delay = Math.min(1000 + attempt * 250, 3000);
-    timer = setTimeout(() => poll(id, attempt + 1), delay);
+    timers[id] = setTimeout(() => poll(id, attempt + 1), delay);
   }
+
+  // ---- 분석 완료 알림: 소리 + (다른 탭에 있을 때) 브라우저 알림 + 탭 제목 표시 ----
+  // 켜고 끄는 상태는 브라우저에 기억합니다. 브라우저 알림은 localhost 또는 HTTPS 주소에서만 됩니다.
+  const notifyBtn = document.getElementById("notify-btn");
+  const baseTitle = document.title;
+  let audioCtx = null;
+  let notifyOn = false;
+  try { notifyOn = localStorage.getItem("notify") === "1"; } catch (_) { /* 기본: 끔 */ }
+  function paintNotify() {
+    if (!notifyBtn) return;
+    notifyBtn.textContent = notifyOn ? "🔔 완료 알림 켜짐" : "🔕 완료 알림 꺼짐";
+    notifyBtn.classList.toggle("on", notifyOn);
+  }
+  function beep(ok) {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const notes = ok ? [660, 880] : [330, 247];
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const at = audioCtx.currentTime + i * 0.16;
+        osc.frequency.value = freq;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(0.2, at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.15);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(at);
+        osc.stop(at + 0.16);
+      });
+    } catch (_) { /* 소리를 못 내는 브라우저 */ }
+  }
+  notifyBtn?.addEventListener("click", async () => {
+    notifyOn = !notifyOn;
+    try { localStorage.setItem("notify", notifyOn ? "1" : "0"); } catch (_) { /* 이번 화면에서만 적용 */ }
+    paintNotify();
+    if (!notifyOn) return;
+    beep(true); // 버튼을 누를 때 한 번 울려 소리 재생을 허용받음
+    if ("Notification" in window && Notification.permission === "default") {
+      try { await Notification.requestPermission(); } catch (_) { /* 거부해도 소리는 울림 */ }
+    }
+  });
+  paintNotify();
+  function notifyDone(job) {
+    const ok = job.status === "SUCCESS";
+    const top = (job.predictions || []).reduce((a, b) => (!a || b.confidence > a.confidence ? b : a), null);
+    const name = job.title || job.video_name || "";
+    const body = ok ? (top ? `${LABELS[top.action_label] || top.action_label} (${pct(top.confidence, 0)})` : (job.result_message || "사람을 찾지 못했습니다."))
+      : (job.error_message || "분석에 실패했습니다.");
+    if (document.hidden) document.title = `${ok ? "✓ 완료" : "✗ 실패"} · ${baseTitle}`;
+    if (!notifyOn) return;
+    beep(ok);
+    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+      try {
+        const n = new Notification(`분석 #${job.user_seq ?? job.id} ${ok ? "완료" : "실패"}${name ? ` · ${name}` : ""}`, { body, tag: `job-${job.id}` });
+        n.onclick = () => { window.focus(); loadJob(job.id); n.close(); };
+      } catch (_) { /* 알림을 못 띄우는 환경 */ }
+    }
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) document.title = baseTitle; });
 
   function setSteps(status) {
     const order = ["PENDING", "STARTED", "DONE"];
@@ -605,6 +681,13 @@
     drawTimeline(null);
     drawCompare(null);
   }
+
+  // 다크/라이트 전환: 색을 다시 읽고 지금 보고 있는 그래프를 새 색으로 다시 그림
+  window.addEventListener("themechange", () => {
+    readColors();
+    if (focusJob) showFocus(focusJob, focusTrack);
+    else showFocusEmpty();
+  });
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
