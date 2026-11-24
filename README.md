@@ -92,41 +92,17 @@ docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테
 
 ## 3. 전체 아키텍처
 
-`compose.yaml`이 실행하는 서비스 5개(점선 박스)와 오가는 데이터입니다. 브라우저에 공개되는 것은 `django`(8000) 하나이고, 서비스끼리는 `localhost`가 아니라 서비스 이름(`fastapi`, `redis`, `postgres`)으로 통신합니다.
+<p align="center"><img src="docs/images/architecture.svg" width="100%" alt="전체 아키텍처"></p>
 
-```mermaid
-flowchart LR
-    B["브라우저<br/>analyses.js"]
-    subgraph compose["docker compose (5 services)"]
-        D["django<br/>Django · DRF · Admin"]
-        R[("redis<br/>작업 대기열")]
-        C["celery<br/>Celery Worker"]
-        F["fastapi<br/>YOLO Pose + RandomForest"]
-        P[("postgres<br/>auth_user · AnalysisJob · PersonPrediction")]
-        M[/"media_data 볼륨<br/>업로드·수집 영상"/]
-    end
-    CAM["IP Webcam<br/>(허용 목록만)"]
+`compose.yaml`이 서비스 5개를 띄웁니다. 밖으로 열린 문은 **django(8000) 하나**이고, 서비스끼리는 `localhost`가 아니라 서비스 이름(`fastapi`, `redis`, `postgres`)으로 대화합니다.
 
-    B -- "① 분석 요청 (영상/카메라 번호)" --> D
-    D -- "② AnalysisJob 저장 (PENDING)" --> P
-    D -- "영상 파일 저장" --> M
-    D -- "③ 커밋 후 작업 등록 (job_id)" --> R
-    R -- "④ 작업 전달" --> C
-    CAM -. "8초 수집" .-> C
-    M -- "영상 읽기" --> C
-    C -- "⑤ 영상 전달 (multipart)" --> F
-    F -- "⑥ 사람별 예측 JSON" --> C
-    C -- "⑦ ORM 결과 저장 (SUCCESS/FAILURE)" --> P
-    B -. "⑧ 상태·결과 조회 (polling)" .-> D
-```
-
-| 서비스 | 맡은 일 | 하지 않는 일 |
-|---|---|---|
-| django | 회원, 분석 요청 CRUD, 권한, 화면, Admin, 대시보드 집계 | AI 추론, 모델 학습 |
-| celery | 영상 확보(업로드 파일 / IP Webcam 수집), FastAPI 호출, ORM 저장, 재시도 | 화면 렌더링 |
-| redis | Celery 메시지 브로커 | 업무 데이터 영구 저장 |
-| fastapi | 영상 → Pose·Tracking → Feature → Random Forest → JSON | DB 테이블·ORM·회원 관리 |
-| postgres | 사용자·작업·사람별 예측 영구 저장 (`postgres_data` 볼륨) | — |
+| | 서비스 | 하는 일 | 하지 않는 일 |
+|:---:|---|---|---|
+| 🟢 | **django** | 회원, 분석 요청 CRUD, 권한, 화면, Admin, 대시보드 집계 | AI 추론, 모델 학습 |
+| 🔴 | **redis** | Celery 메시지 브로커 | 업무 데이터 영구 저장 |
+| 🟠 | **celery** | 영상 확보(업로드 파일 / IP Webcam 수집), FastAPI 호출, 결과 저장, 재시도 | 화면 렌더링 |
+| 🔵 | **fastapi** | 영상 → Pose·Tracking → Feature → Random Forest → JSON | DB·ORM·회원 관리 |
+| 🟣 | **postgres** | 사용자·작업·사람별 예측 영구 저장 (`postgres_data` 볼륨) | — |
 
 ## 4. DB 설계 (ERD)
 
