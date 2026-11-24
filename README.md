@@ -106,7 +106,19 @@ docker compose exec fastapi python -m pytest -q tests      # AI 서버 7개 (테
 
 ## 4. DB 설계 (ERD)
 
-직접 작성한 모델: [`backend/analyses/models.py`](backend/analyses/models.py) (`auth_user`는 Django 기본 제공)
+<p align="center"><img src="docs/images/erd.svg" width="100%" alt="ERD"></p>
+
+📁 직접 작성한 모델은 [`backend/analyses/models.py`](backend/analyses/models.py)에 있습니다. `auth_user`는 Django 기본 테이블입니다.
+
+- 🟢 **auth_user**: 회원 아이디, 비밀번호 해시, 관리자 여부
+- 🟠 **AnalysisJob**: 분석 요청 1건. 누가, 어떤 입력으로 요청했고 지금 어떤 상태인지
+- 🔵 **PersonPrediction**: 그 작업에 나온 사람 1명의 예측과 판단 근거. 두 사람이 나오면 2행
+
+> [!NOTE]
+> 영상 파일은 DB가 아니라 Media 볼륨에 두고 경로만 저장합니다. IP Webcam 주소도 DB에 남기지 않고 카메라 번호만 저장합니다.
+
+<details>
+<summary>전체 필드 보기</summary>
 
 ```mermaid
 erDiagram
@@ -153,15 +165,7 @@ erDiagram
     }
 ```
 
-| 테이블 | 저장하는 것 |
-|---|---|
-| `auth_user` | 회원(아이디, 비밀번호 해시, 관리자 여부) |
-| `AnalysisJob` | 분석 요청 1건: 누가, 어떤 입력으로, 지금 상태, 오류 사유, 처리 시간 |
-| `PersonPrediction` | 한 작업 안의 사람 1명의 예측. 두 사람이 나오면 작업 1건에 2행. `(job, track_id)` 유일. 화면 그래프에 쓰는 판단 근거(`details`)도 함께 저장 |
-
-- 영상 파일 자체는 DB가 아니라 Media 볼륨에 두고 경로만 저장합니다.
-- IP Webcam 주소는 DB·화면에 남기지 않고 허용 목록 번호(`camera_index`)만 저장합니다.
-- 작업을 삭제하면 사람별 예측은 `CASCADE`로 함께 지우고 영상 파일도 지웁니다. 처리 중(STARTED)인 작업은 삭제할 수 없습니다.
+</details>
 
 ## 5. AI 추론 버튼 구현 흐름
 
