@@ -169,7 +169,7 @@ erDiagram
 
 ## 5. AI 추론 버튼 구현 흐름
 
-<p align="center"><img src="docs/images/ai_flow.svg" width="100%" alt="AI 추론 버튼 흐름"></p>
+<p align="center"><img src="docs/images/ai_flow_icons.svg" width="100%" alt="AI 추론 버튼 흐름"></p>
 
 **AI 분석 시작** 버튼을 누르면 웹 서버는 분석을 기다리지 않고 작업 ID부터 돌려줍니다(②). 무거운 추론은 Celery가 뒤에서 처리하고(③~⑥), 화면은 상태를 주기적으로 물어 결과를 받아 그립니다(⑦).
 
