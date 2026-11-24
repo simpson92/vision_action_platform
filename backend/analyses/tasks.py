@@ -95,6 +95,7 @@ def run_analysis(self, job_id: int) -> dict:
         video = result.get("video") or {}
         job.video_duration_sec = video.get("duration_sec")
         job.video_meta = {key: video[key] for key in ("fps", "frame_count", "width", "height") if key in video}
+        job.pose_overlay = result.get("pose") or {}
         job.completed_at = timezone.now()
         job.save()
     return {"job_id": job_id, "status": "SUCCESS", "people": len(result.get("predictions", []))}

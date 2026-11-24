@@ -107,3 +107,9 @@ class AnalysisJobViewSet(
     def status(self, request, pk=None):
         job = self.get_object()
         return Response(AnalysisStatusSerializer(job).data)
+
+    @action(detail=True, methods=["get"])
+    def pose(self, request, pk=None):
+        """결과 영상 위에 그릴 관절 좌표. 상태 조회 응답이 무거워지지 않게 따로 받습니다(남의 작업은 404)."""
+        job = self.get_object()
+        return Response(job.pose_overlay or {"tracks": []})

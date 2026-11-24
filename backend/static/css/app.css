@@ -17,6 +17,7 @@
   --ok: #059669; --warn: #b45309; --bad: #e11d48;
   --pending-bg: #e7e9f3; --pending-ink: #4b5072; --zebra: rgba(30,35,70,.025); --hover: rgba(124,58,237,.06);
   --shadow: 0 1px 2px rgba(30,35,70,.06), 0 6px 18px rgba(30,35,70,.07); --on-color: #ffffff;
+  --bar-soft: #c4b5fd;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -60,7 +61,7 @@ details.help { margin: .25rem 0 .5rem; font-size: .8rem; } details.help ul { mar
 
 /* 입력 */
 label { display: block; margin: .6rem 0; font-size: .88rem; color: var(--muted); }
-input[type=text], input[type=password], input[type=email], select, textarea, label input:not([type=file]):not([type=hidden]) {
+input[type=text], input[type=password], input[type=email], select, textarea, label input:not([type=file]):not([type=hidden]):not([type=checkbox]) {
   display: block; width: 100%; margin-top: .25rem; padding: .55rem .7rem; border: 1.5px solid var(--line); border-radius: 8px;
   background: var(--input); color: var(--text); font: inherit; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
@@ -145,7 +146,7 @@ button.link.danger, .danger { color: var(--bad); } button.link:disabled { opacit
 .bars { margin-top: .75rem; position: relative; }
 .bar { display: grid; grid-template-columns: 9.5em 1fr 3em; align-items: center; gap: .5rem; font-size: .82rem; margin: .2rem 0; }
 .bar .track { position: relative; height: 11px; }
-.bar i { display: block; height: 100%; background: var(--primary2); border-radius: 4px; opacity: .85; }
+.bar i { display: block; height: 100%; background: var(--bar-soft, var(--primary2)); border-radius: 4px; opacity: .85; }
 .bar.first i { background: var(--primary); opacity: 1; }
 .bar .chance { position: absolute; top: -4px; bottom: -4px; border-left: 1.5px dashed var(--muted); }
 .bar b { text-align: right; font-weight: 700; }
@@ -223,7 +224,7 @@ td.actions { white-space: nowrap; }
 .filters { display: flex; flex-wrap: wrap; gap: .5rem .75rem; align-items: flex-end; margin: 0 0 .75rem; }
 .filters label { margin: 0; flex: 1 1 130px; min-width: 120px; }
 .filters label.grow { flex: 2 1 200px; }
-.filters input, .filters select { padding: .4rem .55rem; }
+.filters input, .filters select { padding: .4rem .55rem; height: 2.4rem; }
 .filter-actions { display: flex; gap: .4rem; padding-bottom: .3rem; }
 .filter-actions .chip-btn { padding: .35rem .9rem; font-size: .85rem; }
 a.chip-btn:hover { text-decoration: none; }
@@ -240,3 +241,10 @@ a.chip-btn:hover { text-decoration: none; }
 /* 한 번 클릭 샘플 영상 */
 .samples { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; margin: .55rem 0 0; }
 .samples .muted { font-size: .8rem; margin-right: .2rem; }
+
+/* 결과 영상 위 관절·사람 번호 (static/js/pose-overlay.js) */
+.pose-wrap { position: relative; }
+.pose-canvas { position: absolute; pointer-events: none; }
+.result-video .player, .pose-wrap .player { max-height: 320px; }
+.pose-toggle { display: flex; align-items: center; gap: .4rem; margin: .4rem 0 0; font-size: .82rem; color: var(--text); cursor: pointer; }
+.pose-toggle input { width: 16px; height: 16px; accent-color: var(--primary); margin: 0; }

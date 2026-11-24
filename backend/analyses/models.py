@@ -50,6 +50,8 @@ class AnalysisJob(models.Model):
     # FastAPI가 돌려준 영상 정보(fps, frame_count, width, height)
     video_meta = models.JSONField("영상 정보", default=dict, blank=True)
     processing_ms = models.PositiveIntegerField("AI 처리 시간(ms)", null=True, blank=True)
+    # 결과 영상 위 관절·사람 번호 표시용 좌표 (FastAPI pose 응답 그대로: fps, width, height, tracks)
+    pose_overlay = models.JSONField("관절 좌표(표시용)", default=dict, blank=True, editable=False)
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     started_at = models.DateTimeField(null=True, blank=True)

@@ -52,11 +52,25 @@ class VideoInfo(BaseModel):
     height: int
 
 
+class PoseTrack(BaseModel):
+    id: int = Field(description="Track ID (predictions의 track_id와 같음)")
+    frames: list[int] = Field(description="관절을 찾은 Frame 번호 (0부터)")
+    points: list[list[int]] = Field(description="Frame마다 관절 17개 [x0, y0, …, x16, y16] 픽셀 좌표, 못 찾은 관절은 -1")
+
+
+class PoseOverlay(BaseModel):
+    fps: float
+    width: int
+    height: int
+    tracks: list[PoseTrack]
+
+
 class PredictionResponse(BaseModel):
     status: str = Field(description="ok: 사람별 결과 있음, no_person: 영상은 정상이나 사람이 없음")
     message: str | None = None
     video: VideoInfo
     predictions: list[PersonPrediction]
+    pose: PoseOverlay | None = Field(None, description="결과 영상 위 관절·사람 번호 표시용 좌표")
     processing_ms: int
     settings: dict
 

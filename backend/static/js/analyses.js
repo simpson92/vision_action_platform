@@ -32,6 +32,7 @@
     const css = getComputedStyle(document.documentElement);
     ["--primary", "--primary2", "--muted", "--line2", "--ok", "--warn", "--bad", "--text", "--card"]
       .forEach((n) => (C[n.slice(2)] = css.getPropertyValue(n).trim()));
+    C.soft = css.getPropertyValue("--bar-soft").trim() || C.primary2; // 라이트 모드에서 1등 색과 구분되는 연보라
     if (hasChart) {
       Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
       Chart.defaults.color = C.muted;
@@ -43,7 +44,7 @@
   // ---- 지금 보고 있는 영상 한 건: 상단 지표 4개 + 그래프 2개 ----
   // 데이터는 그 작업의 status API 응답(사람별 details: 구간별 확률, 일치율, 관절 인식)에서 바로 가져옵니다.
   const ACTION_KEYS = Object.keys(EXPECTED);
-  const lineColor = (i) => [C.primary, C.primary2, "#60a5fa", C.warn, C.ok, "#22d3ee"][i];
+  const lineColor = (i) => [C.primary, C.soft, "#60a5fa", C.warn, C.ok, "#22d3ee"][i];
   const charts = {};
   let focusJob = null;
   let focusTrack = null;
@@ -182,7 +183,7 @@
     charts.compare = new Chart(canvas, {
       type: "bar",
       data: { labels: keys.map((k) => LABELS[k]), datasets: [
-        { label: "전체 구간(학습과 같은 방식)", data: row(d.whole_probabilities), backgroundColor: C.primary2, borderRadius: 3 },
+        { label: "전체 구간(학습과 같은 방식)", data: row(d.whole_probabilities), backgroundColor: C.soft, borderRadius: 3 },
         { label: "2초 구간 평균", data: row(d.window_mean_probabilities), backgroundColor: "#60a5fa", borderRadius: 3 },
         { label: "최종", data: row(person.probabilities), backgroundColor: C.primary, borderRadius: 3 },
       ] },
@@ -600,6 +601,7 @@
       m("video", job.video_duration_sec ? `${Number(job.video_duration_sec).toFixed(1)}초` : "-");
       metrics.hidden = false;
     }
+    showResultVideo(job);
     const people = document.getElementById("people");
     if (job.status === "SUCCESS" && !job.predictions.length) {
       people.innerHTML = `<p class="muted">${escapeHtml(job.result_message || "영상에서 사람을 찾지 못했습니다.")}</p>`;
@@ -607,6 +609,30 @@
       people.innerHTML = job.predictions.map((p) => personCard(p, job.expected_action, job.predictions.length > 1)).join("");
     }
     if (job.is_finished) showFocus(job, focusJob && focusJob.id === job.id ? focusTrack : null);
+  }
+
+  // ---- 결과 영상 + 관절·사람 번호 표시 (좌표는 /api/analyses/{id}/pose/) ----
+  const resultBox = document.getElementById("result-video-box");
+  const resultVideo = document.getElementById("result-video");
+  const poseNote = document.getElementById("pose-note");
+  const overlay = window.PoseOverlay && resultVideo ? window.PoseOverlay.attach(resultVideo, document.getElementById("pose-toggle")) : null;
+  resultVideo?.addEventListener("posedata", (event) => {
+    poseNote.textContent = event.detail ? "" : "(이 분석에는 관절 좌표가 없습니다. 새로 분석하면 표시돼요)";
+  });
+  function showResultVideo(job) {
+    if (!resultBox) return;
+    const show = job.status === "SUCCESS" && !!job.video_url;
+    resultBox.hidden = !show;
+    if (!show) {
+      resultVideo.pause();
+      return;
+    }
+    if (resultVideo.dataset.job !== String(job.id)) {
+      resultVideo.dataset.job = job.id;
+      resultVideo.src = job.video_url;
+      poseNote.textContent = "";
+      overlay?.load(`/api/analyses/${job.id}/pose/`);
+    }
   }
 
   function personCard(p, expected, many) {

@@ -29,6 +29,8 @@ FAKE_RESULT = {
         {"track_id": 2, "action_label": "UNCERTAIN", "raw_label": "wave", "confidence": 0.22, "margin": 0.01,
          "probabilities": {"wave": 0.22}, "window_count": 3, "valid_frames": 40, "input_quality": "fair"},
     ],
+    "pose": {"fps": 25.0, "width": 640, "height": 480,
+             "tracks": [{"id": 1, "frames": [0, 1], "points": [[10, 20] * 17, [11, 21] * 17]}]},
 }
 
 
@@ -257,3 +259,19 @@ class AnalysisApiTests(TestCase):
         job.refresh_from_db()
         self.assertEqual(job.title, "새 제목")
         self.assertContains(self.client.get(reverse("analyses:index")), 'data-title="새 제목"')
+
+    # 결과 영상 위 관절 표시: 좌표가 저장되고, 주인(과 관리자 ?all=1)만 받음
+    @mock.patch("analyses.tasks.predict_video", return_value=FAKE_RESULT)
+    def test_pose_overlay_saved_and_private(self, _):
+        job = self.create_job(self.a)
+        run_analysis.apply(args=[job.pk])
+        self.client.force_login(self.a)
+        body = self.client.get(f"/api/analyses/{job.pk}/pose/").json()
+        self.assertEqual(body["tracks"][0]["frames"], [0, 1])
+        self.assertEqual(len(body["tracks"][0]["points"][0]), 34)
+        self.assertNotIn("pose_overlay", self.client.get(f"/api/analyses/{job.pk}/status/").json())  # 상태 조회는 가볍게
+        self.assertContains(self.client.get(reverse("analyses:detail", args=[job.pk])), "data-pose-url")
+        self.client.force_login(self.b)
+        self.assertEqual(self.client.get(f"/api/analyses/{job.pk}/pose/").status_code, 404)
+        self.client.force_login(self.admin)
+        self.assertEqual(self.client.get(f"/api/analyses/{job.pk}/pose/?all=1").status_code, 200)

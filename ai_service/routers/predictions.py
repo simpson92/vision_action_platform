@@ -82,6 +82,7 @@ async def predict_video_endpoint(request: Request, file: UploadFile = File(..., 
             "height": pose.height,
         },
         predictions=predictions,
+        pose={"fps": round(pose.fps, 3), "width": pose.width, "height": pose.height, "tracks": pose.overlay_tracks},
         processing_ms=int((time.perf_counter() - started) * 1000),
         settings={
             "confidence_threshold": settings.confidence_threshold,

@@ -91,6 +91,10 @@
         <div><span>요청 → 완료</span><b data-m="total">-</b></div>
         <div><span>영상 길이</span><b data-m="video">-</b></div>
       </div>
+      <div class="result-video" id="result-video-box" hidden>
+        <video id="result-video" controls muted playsinline class="player"></video>
+        <label class="pose-toggle"><input type="checkbox" id="pose-toggle" checked> 관절·사람 번호 표시 <span class="muted" id="pose-note"></span></label>
+      </div>
       <div id="people"></div>
       <a id="detail-link" href="#">상세 보기 →</a>
     </div>
@@ -172,5 +176,6 @@
 {% block scripts %}
 <!-- Chart.js 4.4.1 (MIT): 시연장 인터넷이 없어도 차트가 보이도록 저장소에 포함 -->
 <script src="{% static 'vendor/chart.umd.js' %}"></script>
+<script src="{% static 'js/pose-overlay.js' %}"></script>
 <script src="{% static 'js/analyses.js' %}"></script>
 {% endblock %}

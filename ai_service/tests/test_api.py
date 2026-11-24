@@ -53,6 +53,7 @@ def test_empty_scene_returns_no_person(client, tmp_path):
     body = r.json()
     assert body["status"] == "no_person"
     assert body["predictions"] == []
+    assert body["pose"]["tracks"] == []
 
 
 # 판단을 확정(UNCERTAIN 아님)하는 S03 영상 3개: 확정한 결과는 정답이어야 함
@@ -76,3 +77,8 @@ def test_real_video_top1(client, name, expected):
     starts = [w["start_sec"] for w in main["timeline"]]
     assert starts == sorted(starts)
     assert set(main["whole_probabilities"]) == set(main["probabilities"])
+    # 결과 영상 위 관절 표시용 좌표: 사람별 Frame 번호와 관절 17개(34개 값)
+    track = next(t for t in body["pose"]["tracks"] if t["id"] == main["track_id"])
+    assert len(track["frames"]) == len(track["points"]) > 0
+    assert all(len(p) == 34 for p in track["points"])
+    assert body["pose"]["width"] == body["video"]["width"]

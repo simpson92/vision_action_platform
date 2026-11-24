@@ -54,10 +54,36 @@ class VideoPoseResult:
     height: int
     people: list[PersonFeatures]
     pose_seconds: float
+    # 화면의 관절 표시용: 사람별 Frame 번호와 관절 17개 좌표(정수 픽셀, 못 찾은 관절은 -1)
+    overlay_tracks: list[dict] = field(default_factory=list)
 
     @property
     def duration_seconds(self) -> float:
         return self.frame_count / self.fps if self.fps > 0 else 0.0
+
+
+OVERLAY_MAX_FRAMES = 1800  # 사람 한 명당 표시용 Frame 상한 (긴 영상은 건너뛰며 저장해 응답 크기 제한)
+OVERLAY_MIN_CONFIDENCE = 0.3
+
+
+def overlay_track(track_id: int, frame_ids: np.ndarray, keypoints: np.ndarray, keypoint_conf: np.ndarray,
+                  interpolated: bool, min_confidence: float = OVERLAY_MIN_CONFIDENCE) -> dict:
+    """(T, 17, 2) 좌표를 화면 표시용 JSON으로 줄입니다: {"id", "frames": [...], "points": [[x0, y0, ..., x16, y16], ...]}.
+
+    보간한 관절은 보간 좌표를 그대로 쓰고(모델이 본 값), 보간하지 못한 낮은 Confidence 관절과 (0, 0)은 -1로 둡니다.
+    """
+    step = max(1, int(np.ceil(len(frame_ids) / OVERLAY_MAX_FRAMES)))
+    # 보간은 믿을 만한 값이 2개 이상인 관절만 하므로, 그렇지 않은 관절의 낮은 값은 표시하지 않음
+    filled = (keypoint_conf >= min_confidence).sum(axis=0) >= 2 if interpolated else np.zeros(keypoint_conf.shape[1], bool)
+    frames, points = [], []
+    for i in range(0, len(frame_ids), step):
+        xy = np.rint(keypoints[i]).astype(int)
+        missing = (xy[:, 0] <= 0) & (xy[:, 1] <= 0)
+        missing |= (keypoint_conf[i] < min_confidence) & ~filled
+        xy[missing] = -1
+        frames.append(int(frame_ids[i]))
+        points.append(xy.reshape(-1).tolist())
+    return {"id": int(track_id), "frames": frames, "points": points}
 
 
 def _to_numpy(value) -> np.ndarray:
@@ -191,7 +217,7 @@ class PosePipeline:
         started = time.perf_counter()
         tracks, fps, frame_count, width, height = self.track_video(video_path)
 
-        people = []
+        people, overlay = [], []
         for track in tracks.values():
             frame_ids = np.asarray(track.frame_ids, dtype=np.int32)
             keypoints = np.stack(track.keypoints)
@@ -201,6 +227,8 @@ class PosePipeline:
                 keypoints, replaced = interpolate_low_confidence(
                     keypoints, keypoint_conf, frame_ids.astype(np.float32), keypoint_min_confidence
                 )
+            overlay.append(overlay_track(track.track_id, frame_ids, keypoints, keypoint_conf, interpolate,
+                                         keypoint_min_confidence if interpolate else OVERLAY_MIN_CONFIDENCE))
 
             features, valid_ids = [], []
             for frame_id, points in zip(frame_ids, keypoints):
@@ -222,6 +250,7 @@ class PosePipeline:
             )
 
         people.sort(key=lambda p: p.track_id)
+        overlay.sort(key=lambda t: t["id"])
         return VideoPoseResult(
             fps=fps,
             frame_count=frame_count,
@@ -229,4 +258,5 @@ class PosePipeline:
             height=height,
             people=people,
             pose_seconds=time.perf_counter() - started,
+            overlay_tracks=overlay,
         )

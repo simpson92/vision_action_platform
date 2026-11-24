@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}분석 #{{ job.user_seq }}{% endblock %}
 {% block content %}
 <section class="card">
@@ -17,7 +18,11 @@
     {% if job.result_message %}<tr><th>메시지</th><td>{{ job.result_message }}</td></tr>{% endif %}
     {% if job.memo %}<tr><th>메모</th><td>{{ job.memo|linebreaksbr }}</td></tr>{% endif %}
   </table>
-  {% if job.video %}<video src="{{ job.video.url }}" controls muted class="player"></video>{% endif %}
+  {% if job.video %}
+  <video id="detail-video" src="{{ job.video.url }}" controls muted playsinline class="player"
+         data-pose-url="/api/analyses/{{ job.id }}/pose/{% if job.user != request.user %}?all=1{% endif %}"></video>
+  <label class="pose-toggle"><input type="checkbox" data-pose-toggle="detail-video" checked> 관절·사람 번호 표시{% if not job.pose_overlay.tracks %} <span class="muted">(이 분석에는 관절 좌표가 없습니다. 새로 분석하면 표시돼요)</span>{% endif %}</label>
+  {% endif %}
 </section>
 <section class="card">
   <div class="cardhead"><h2>사람별 예측 ({{ job.predictions.count }}명)</h2></div>
@@ -33,4 +38,7 @@
   </table>
   <p class="muted">예측은 정답 판정이 아닙니다. 학습 데이터가 적어 새 사람·환경에서는 틀릴 수 있어, 확률이 낮거나 1·2등 차이가 작으면 "판단 보류"로 표시합니다.</p>
 </section>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/pose-overlay.js' %}"></script>
 {% endblock %}
