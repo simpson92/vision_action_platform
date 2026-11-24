@@ -218,3 +218,21 @@ td.actions { white-space: nowrap; }
 .chip-btn:hover { border-color: var(--primary); color: var(--primary2); }
 .chip-btn.on { background: var(--soft); color: var(--primary2); border-color: var(--primary); }
 .chip-btn:disabled { opacity: .6; cursor: progress; }
+
+/* 이력 검색·필터 */
+.filters { display: flex; flex-wrap: wrap; gap: .5rem .75rem; align-items: flex-end; margin: 0 0 .75rem; }
+.filters label { margin: 0; flex: 1 1 130px; min-width: 120px; }
+.filters label.grow { flex: 2 1 200px; }
+.filters input, .filters select { padding: .4rem .55rem; }
+.filter-actions { display: flex; gap: .4rem; padding-bottom: .3rem; }
+.filter-actions .chip-btn { padding: .35rem .9rem; font-size: .85rem; }
+a.chip-btn:hover { text-decoration: none; }
+.filter-note { margin: -.25rem 0 .6rem; }
+/* 체크박스 칸, 제목 바로 수정 */
+.table th.sel, .table td.sel { width: 2.2rem; text-align: center; }
+.table input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; vertical-align: middle; }
+.title-edit { background: none; border: 0; padding: 0; font: inherit; color: var(--text); cursor: text; text-align: left; max-width: 16em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+.title-edit .pen { color: var(--muted); font-size: .8rem; opacity: .5; }
+.title-edit:hover .pen, .title-edit:focus .pen { opacity: 1; color: var(--primary2); }
+.title-input { width: 14em; padding: .25rem .45rem; border: 1.5px solid var(--primary); border-radius: 6px; background: var(--input); color: var(--text); font: inherit; }

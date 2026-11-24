@@ -104,22 +104,48 @@
   </section>
 </div>
 
-<section class="card">
+<section class="card" id="history-card">
   <div class="section-head">
     <button type="button" class="fold" id="fold-history" aria-expanded="true" aria-controls="history-body">
-      <span class="chev">▾</span> <h2>최근 분석 이력</h2> <span class="count" id="history-count">{{ recent|length }}</span>
+      <span class="chev">▾</span> <h2>{% if filtering %}검색한 분석 이력{% else %}최근 분석 이력{% endif %}</h2> <span class="count" id="history-count">{{ recent|length }}</span>
     </button>
-    <span class="head-actions"><span class="muted hint">행을 누르면 위에 그 영상의 결과가 보여요</span>
+    <span class="head-actions"><span class="muted hint">행을 누르면 위에 그 영상의 결과가 보여요 · 제목을 누르면 바로 고쳐요</span>
+      <button type="button" class="link danger" id="delete-selected" disabled>선택 삭제</button>
       <button type="button" class="link danger" id="clear-history">전체 지우기</button></span>
   </div>
   <div id="history-body">
+  <form class="filters" method="get" action="{% url 'analyses:index' %}#history-card" id="history-filters">
+    <label class="grow">제목·파일 이름 <input type="text" name="q" value="{{ filters.q }}" maxlength="100" placeholder="검색어"></label>
+    <label>예측 동작
+      <select name="action">
+        <option value="">전체</option>
+        {% for key, label in actions %}<option value="{{ key }}"{% if filters.action == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        <option value="UNCERTAIN"{% if filters.action == "UNCERTAIN" %} selected{% endif %}>판단 보류</option>
+      </select>
+    </label>
+    <label>상태
+      <select name="status">
+        <option value="">전체</option>
+        {% for key, label in status_choices %}<option value="{{ key }}"{% if filters.status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>시작일 <input type="date" name="date_from" value="{{ filters.date_from }}"></label>
+    <label>종료일 <input type="date" name="date_to" value="{{ filters.date_to }}"></label>
+    <div class="filter-actions">
+      <button type="submit" class="chip-btn on">검색</button>
+      {% if filtering %}<a href="{% url 'analyses:index' %}#history-card" class="chip-btn">초기화</a>{% endif %}
+    </div>
+  </form>
+  {% if filtering %}<p class="muted filter-note">조건에 맞는 기록 {{ matched_count }}건{% if matched_count > recent|length %} 중 최근 {{ recent|length }}건{% endif %}을 보여 줍니다.</p>{% endif %}
   <table class="table" id="history">
-    <thead><tr><th>#</th><th>시간</th><th>입력</th><th>상태</th><th>결과</th><th>Confidence</th><th>실제 동작</th><th></th></tr></thead>
+    <thead><tr><th class="sel"><input type="checkbox" id="select-all" aria-label="모두 선택"></th><th>#</th><th>제목</th><th>시간</th><th>입력</th><th>상태</th><th>결과</th><th>Confidence</th><th>실제 동작</th><th></th></tr></thead>
     <tbody>
       {% for job in recent %}
       {% with top=job.top_prediction state=job.match_state %}
       <tr data-id="{{ job.id }}" data-seq="{{ job.user_seq }}" data-status="{{ job.status }}" class="pick">
+        <td class="sel"><input type="checkbox" class="row-check" aria-label="분석 {{ job.user_seq }} 선택"></td>
         <td>{{ job.user_seq }}</td>
+        <td class="title-cell"><button type="button" class="title-edit" data-title="{{ job.title }}" title="눌러서 제목 수정">{% if job.title %}{{ job.title }}{% else %}<span class="muted">제목 없음</span>{% endif %} <span class="pen">✎</span></button></td>
         <td>{{ job.created_at|date:"m/d H:i" }}</td>
         <td>{{ job.get_input_type_display }}</td>
         <td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td>
@@ -130,7 +156,7 @@
       </tr>
       {% endwith %}
       {% empty %}
-      <tr class="empty"><td colspan="8" class="muted">아직 분석 기록이 없습니다.</td></tr>
+      <tr class="empty"><td colspan="10" class="muted">{% if filtering %}조건에 맞는 기록이 없습니다.{% else %}아직 분석 기록이 없습니다.{% endif %}</td></tr>
       {% endfor %}
     </tbody>
   </table>

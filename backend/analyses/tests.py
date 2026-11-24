@@ -201,3 +201,47 @@ class AnalysisApiTests(TestCase):
         get.assert_called_once_with("http://cam.local/shot.jpg", timeout=mock.ANY)
         self.assertEqual(self.client.get(reverse("analyses:camera_snapshot", args=[3])).status_code, 404)
 
+
+    # 이력 검색·필터: 제목, 예측 동작, 상태, 날짜 (화면과 API 같은 조건)
+    @mock.patch("analyses.tasks.predict_video", return_value=FAKE_RESULT)
+    def test_history_search_and_filter(self, _):
+        bend = self.create_job(self.a, title="허리 연습")
+        run_analysis.apply(args=[bend.pk])
+        self.create_job(self.a, title="손 흔들기 테스트")
+        self.create_job(self.b, title="허리 남의 것")
+        self.client.force_login(self.a)
+        ids = lambda query: [j["id"] for j in self.client.get(f"/api/analyses/?{query}").json()["results"]]
+        self.assertEqual(ids("q=허리"), [bend.pk])  # 남의 기록은 검색돼도 안 나옴
+        self.assertEqual(ids("action=bend_return"), [bend.pk])
+        self.assertEqual(len(ids("status=PENDING")), 1)
+        self.assertEqual(len(ids("date_from=2000-01-01&date_to=2999-12-31")), 2)
+        self.assertEqual(ids("date_to=2000-01-01"), [])
+        self.assertEqual(len(ids("status=nonsense")), 2)  # 잘못된 값은 무시
+        page = self.client.get(reverse("analyses:index"), {"q": "허리"})
+        self.assertEqual([j.pk for j in page.context["recent"]], [bend.pk])
+        self.assertContains(page, "조건에 맞는 기록 1건")
+
+    # 체크박스 여러 건 삭제: 내 것만, 처리 중인 작업은 남김
+    def test_bulk_delete_only_my_finished_jobs(self):
+        mine1, mine2 = self.create_job(self.a), self.create_job(self.a)
+        running = self.create_job(self.a)
+        AnalysisJob.objects.filter(pk=running.pk).update(status="STARTED")
+        other = self.create_job(self.b)
+        self.client.force_login(self.a)
+        res = self.client.post("/api/analyses/bulk-delete/", {"ids": [mine1.pk, mine2.pk, running.pk, other.pk]},
+                               content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(sorted(res.json()["deleted_ids"]), sorted([mine1.pk, mine2.pk]))
+        self.assertEqual(res.json()["skipped"], 2)
+        self.assertTrue(AnalysisJob.objects.filter(pk__in=[running.pk, other.pk]).count() == 2)
+        self.assertEqual(self.client.post("/api/analyses/bulk-delete/", {"ids": []}, content_type="application/json").status_code, 400)
+
+    # 이력 표에서 제목 바로 수정 (PATCH 제목만)
+    def test_inline_title_edit(self):
+        job = self.create_job(self.a, title="예전 제목")
+        self.client.force_login(self.a)
+        r = self.client.patch(f"/api/analyses/{job.pk}/", {"title": "새 제목"}, content_type="application/json")
+        self.assertEqual(r.status_code, 200)
+        job.refresh_from_db()
+        self.assertEqual(job.title, "새 제목")
+        self.assertContains(self.client.get(reverse("analyses:index")), 'data-title="새 제목"')

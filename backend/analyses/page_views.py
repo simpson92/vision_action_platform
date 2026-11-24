@@ -9,18 +9,27 @@ from django.views.decorators.cache import never_cache
 
 import requests
 
+from .filters import filter_jobs, read_filters
 from .models import ACTION_CHOICES, AnalysisJob, PersonPrediction
 
 
 @login_required
 def index(request):
     cameras = [{"index": i, "name": f"카메라 {i + 1}"} for i in range(len(settings.IP_WEBCAM_ALLOWED_URLS))]
-    recent = AnalysisJob.objects.filter(user=request.user).prefetch_related("predictions")[:10]
+    # 이력: 기본은 최근 10건, 검색·필터를 쓰면 맞는 것 최대 50건
+    filters = read_filters(request.GET)
+    filtering = any(filters.values())
+    matched = filter_jobs(AnalysisJob.objects.filter(user=request.user), filters)
+    recent = matched.prefetch_related("predictions")[: 50 if filtering else 10]
     return render(request, "analyses/index.html", {
         "cameras": cameras,
         "capture_seconds": settings.IP_WEBCAM_CAPTURE_SECONDS,
         "actions": ACTION_CHOICES,
         "recent": recent,
+        "filters": filters,
+        "filtering": filtering,
+        "matched_count": matched.count() if filtering else None,
+        "status_choices": AnalysisJob.Status.choices,
         "max_upload_mb": settings.MAX_UPLOAD_MB,
         "rules": {
             "confidence": settings.CONFIDENCE_THRESHOLD,

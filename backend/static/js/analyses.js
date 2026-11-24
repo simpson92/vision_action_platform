@@ -609,36 +609,49 @@
       row.className = "pick";
       const now = new Date();
       const two = (n) => String(n).padStart(2, "0");
-      row.innerHTML = `<td>${row.dataset.seq}</td><td>${two(now.getMonth() + 1)}/${two(now.getDate())} ${two(now.getHours())}:${two(now.getMinutes())}</td>
+      row.innerHTML = `<td class="sel"><input type="checkbox" class="row-check" aria-label="분석 ${row.dataset.seq} 선택"></td>
+        <td>${row.dataset.seq}</td><td class="title-cell"></td>
+        <td>${two(now.getMonth() + 1)}/${two(now.getDate())} ${two(now.getHours())}:${two(now.getMinutes())}</td>
         <td>${inputType.value === "upload" ? "영상 업로드" : "IP Webcam"}</td><td></td><td></td><td><span class="muted">-</span></td><td></td>
         <td class="actions"><a href="/analyses/${job.id}/">상세</a> <button type="button" class="link danger del-job">삭제</button></td>`;
+      row.children[2].innerHTML = titleButton(job.title || "");
       tbody.prepend(row);
       updateCount();
     }
     row.dataset.status = job.status;
     const cells = row.children;
-    cells[3].innerHTML = `<span class="badge s-${job.status}">${job.status_display}</span>`;
+    const titleBtn = cells[2].querySelector(".title-edit");
+    if (titleBtn && job.title != null && titleBtn.dataset.title !== job.title) cells[2].innerHTML = titleButton(job.title);
+    cells[5].innerHTML = `<span class="badge s-${job.status}">${job.status_display}</span>`;
     if (job.predictions && job.predictions.length) {
-      cells[4].innerHTML = job.predictions.map((p) =>
+      cells[6].innerHTML = job.predictions.map((p) =>
         `<span class="chip${isDecided(p.action_label) ? "" : " hold"}">#${p.track_id} ${LABELS[p.action_label] || p.action_label}</span>`).join("");
       const top = job.predictions.reduce((a, b) => (b.confidence > a.confidence ? b : a));
-      cells[5].innerHTML = `<span class="mini"><i style="width:${(top.confidence * 100).toFixed(0)}%"></i></span>${top.confidence.toFixed(2)}`;
+      cells[7].innerHTML = `<span class="mini"><i style="width:${(top.confidence * 100).toFixed(0)}%"></i></span>${top.confidence.toFixed(2)}`;
     } else if (job.status === "FAILURE") {
-      cells[4].innerHTML = `<span class="muted">${escapeHtml((job.error_message || "").slice(0, 40))}</span>`;
+      cells[6].innerHTML = `<span class="muted">${escapeHtml((job.error_message || "").slice(0, 40))}</span>`;
     } else if (job.status === "SUCCESS") {
-      cells[4].innerHTML = `<span class="muted">${escapeHtml(job.result_message || "-")}</span>`;
+      cells[6].innerHTML = `<span class="muted">${escapeHtml(job.result_message || "-")}</span>`;
     }
-    cells[6].innerHTML = matchCell({ ...job, expected_action: job.expected_action ?? row.dataset.expected });
+    cells[8].innerHTML = matchCell({ ...job, expected_action: job.expected_action ?? row.dataset.expected });
+  }
+  function titleButton(title) {
+    const text = title ? escapeHtml(title) : '<span class="muted">제목 없음</span>';
+    return `<button type="button" class="title-edit" data-title="${escapeHtml(title)}" title="눌러서 제목 수정">${text} <span class="pen">✎</span></button>`;
   }
 
   // ---- 이력 삭제 (한 건 / 전체) ----
   const historyBody = document.querySelector("#history tbody");
   function showEmptyIfNeeded() {
     if (historyBody && !historyBody.querySelector("tr[data-id]")) {
-      historyBody.innerHTML = '<tr class="empty"><td colspan="8" class="muted">아직 분석 기록이 없습니다.</td></tr>';
+      historyBody.innerHTML = '<tr class="empty"><td colspan="10" class="muted">아직 분석 기록이 없습니다.</td></tr>';
     }
+    updateSelection();
   }
   historyBody?.addEventListener("click", async (event) => {
+    const edit = event.target.closest(".title-edit");
+    if (edit) return startTitleEdit(edit);
+    if (event.target.closest(".sel, .title-cell, input")) return; // 체크박스·제목 칸은 행 선택과 따로
     const btn = event.target.closest(".del-job");
     if (!btn) {
       const tr = event.target.closest("tr[data-id]");
@@ -672,6 +685,97 @@
     showEmptyIfNeeded();
     updateCount();
   });
+
+  // ---- 체크박스로 여러 건 골라 삭제 ----
+  const selectAll = document.getElementById("select-all");
+  const deleteSelected = document.getElementById("delete-selected");
+  const checkedRows = () => [...document.querySelectorAll("#history .row-check:checked")].map((c) => c.closest("tr"));
+  function updateSelection() {
+    const all = document.querySelectorAll("#history .row-check");
+    const n = checkedRows().length;
+    if (deleteSelected) {
+      deleteSelected.disabled = n === 0;
+      deleteSelected.textContent = n ? `선택 삭제 (${n})` : "선택 삭제";
+    }
+    if (selectAll) {
+      selectAll.checked = all.length > 0 && n === all.length;
+      selectAll.indeterminate = n > 0 && n < all.length;
+    }
+  }
+  historyBody?.addEventListener("change", (event) => { if (event.target.classList.contains("row-check")) updateSelection(); });
+  selectAll?.addEventListener("change", () => {
+    document.querySelectorAll("#history .row-check").forEach((c) => (c.checked = selectAll.checked));
+    updateSelection();
+  });
+  deleteSelected?.addEventListener("click", async () => {
+    const rows = checkedRows();
+    if (!rows.length) return;
+    const seqs = rows.map((r) => `#${r.dataset.seq}`).join(", ");
+    if (!confirm(`분석 ${seqs} (${rows.length}건) 기록과 영상을 삭제할까요? (처리 중인 작업은 남습니다)`)) return;
+    deleteSelected.disabled = true;
+    const res = await fetch("/api/analyses/bulk-delete/", {
+      method: "POST", credentials: "same-origin",
+      headers: { "X-CSRFToken": csrf, "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: rows.map((r) => Number(r.dataset.id)) }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(flattenErrors(body) || `삭제 실패 (HTTP ${res.status})`);
+      return updateSelection();
+    }
+    body.deleted_ids.forEach((id) => historyBody.querySelector(`tr[data-id="${id}"]`)?.remove());
+    if (body.skipped) alert(`처리 중인 ${body.skipped}건은 끝난 뒤에 삭제할 수 있어 남겨 두었습니다.`);
+    showEmptyIfNeeded();
+    updateCount();
+    updateSelection();
+  });
+
+  // ---- 이력 표에서 제목 바로 수정 (Enter 저장, Esc 취소, 칸 밖을 누르면 저장) ----
+  function startTitleEdit(btn) {
+    const cell = btn.closest("td");
+    const row = btn.closest("tr");
+    const before = btn.dataset.title || "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = 100;
+    input.value = before;
+    input.className = "title-input";
+    input.placeholder = "제목 입력";
+    cell.replaceChildren(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = async (save) => {
+      if (done) return;
+      done = true;
+      const title = input.value.trim();
+      if (!save || title === before) {
+        cell.innerHTML = titleButton(before);
+        return;
+      }
+      input.disabled = true;
+      const res = await fetch(`/api/analyses/${row.dataset.id}/`, {
+        method: "PATCH", credentials: "same-origin",
+        headers: { "X-CSRFToken": csrf, "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      }).catch(() => null);
+      if (!res || !res.ok) {
+        cell.innerHTML = titleButton(before);
+        alert("제목을 저장하지 못했습니다.");
+        return;
+      }
+      cell.innerHTML = titleButton(title);
+      if (focusJob && focusJob.id === Number(row.dataset.id)) {
+        focusJob.title = title;
+        showFocus(focusJob, focusTrack);
+      }
+    };
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") { event.preventDefault(); finish(true); }
+      else if (event.key === "Escape") finish(false);
+    });
+    input.addEventListener("blur", () => finish(true));
+  }
 
   // 처음 열면 가장 최근에 완료된 분석을 위에 보여 줌
   const firstDone = document.querySelector('#history tr[data-status="SUCCESS"]');
