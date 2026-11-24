@@ -13,10 +13,10 @@ class PersonPredictionInline(admin.TabularInline):
 
 @admin.register(AnalysisJob)
 class AnalysisJobAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "input_type", "status", "expected_action", "prediction_summary", "processing_ms", "created_at")
+    list_display = ("id", "user", "user_seq", "input_type", "status", "expected_action", "prediction_summary", "processing_ms", "created_at")
     list_filter = ("status", "input_type", "expected_action", "created_at")
     search_fields = ("user__username", "title", "memo", "celery_task_id")
-    readonly_fields = ("celery_task_id", "started_at", "completed_at", "created_at", "processing_ms", "video_duration_sec")
+    readonly_fields = ("user_seq", "celery_task_id", "started_at", "completed_at", "created_at", "processing_ms", "video_duration_sec")
     inlines = [PersonPredictionInline]
     date_hierarchy = "created_at"
 
@@ -33,4 +33,4 @@ class PersonPredictionAdmin(admin.ModelAdmin):
     list_display = ("id", "job", "track_id", "action_label", "confidence", "margin", "input_quality", "predicted_at")
     list_filter = ("action_label", "input_quality", "job__input_type")
     search_fields = ("job__user__username", "action_label")
-    list_select_related = ("job",)
+    list_select_related = ("job__user",)

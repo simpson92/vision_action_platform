@@ -117,8 +117,8 @@
     <tbody>
       {% for job in recent %}
       {% with top=job.top_prediction state=job.match_state %}
-      <tr data-id="{{ job.id }}" data-status="{{ job.status }}" class="pick">
-        <td>{{ job.id }}</td>
+      <tr data-id="{{ job.id }}" data-seq="{{ job.user_seq }}" data-status="{{ job.status }}" class="pick">
+        <td>{{ job.user_seq }}</td>
         <td>{{ job.created_at|date:"m/d H:i" }}</td>
         <td>{{ job.get_input_type_display }}</td>
         <td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td>

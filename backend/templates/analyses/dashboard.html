@@ -20,7 +20,7 @@
     <thead><tr><th>#</th><th>사용자</th><th>입력</th><th>상태</th><th>결과</th><th>시간</th></tr></thead>
     <tbody>
     {% for job in recent %}
-      <tr><td><a href="{% url 'analyses:detail' job.id %}">{{ job.id }}</a></td><td>{{ job.user.username }}</td><td>{{ job.get_input_type_display }}</td>
+      <tr><td><a href="{% url 'analyses:detail' job.id %}">{{ job.user_seq }}</a></td><td>{{ job.user.username }}</td><td>{{ job.get_input_type_display }}</td>
         <td><span class="badge s-{{ job.status }}">{{ job.get_status_display }}</span></td>
         <td>{% for p in job.predictions.all %}<span class="chip">#{{ p.track_id }} {{ p.action_display }}</span>{% empty %}{{ job.error_message|truncatechars:30|default:"-" }}{% endfor %}</td>
         <td>{{ job.created_at|date:"m/d H:i" }}</td></tr>

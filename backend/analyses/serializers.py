@@ -33,11 +33,11 @@ class AnalysisJobSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnalysisJob
-        fields = ("id", "username", "title", "memo", "input_type", "input_type_display", "video", "video_url",
+        fields = ("id", "user_seq", "username", "title", "memo", "input_type", "input_type_display", "video", "video_url",
                   "camera_index", "capture_seconds", "expected_action", "status", "status_display",
                   "celery_task_id", "error_message", "result_message", "video_duration_sec", "video_meta", "processing_ms",
                   "total_seconds", "created_at", "started_at", "completed_at", "predictions")
-        read_only_fields = ("status", "celery_task_id", "error_message", "result_message", "video_duration_sec", "video_meta",
+        read_only_fields = ("user_seq", "status", "celery_task_id", "error_message", "result_message", "video_duration_sec", "video_meta",
                             "processing_ms", "created_at", "started_at", "completed_at", "capture_seconds")
         extra_kwargs = {"video": {"write_only": True, "required": False}}
 
@@ -97,7 +97,7 @@ class AnalysisStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnalysisJob
-        fields = ("id", "title", "status", "status_display", "is_finished", "error_message", "result_message",
+        fields = ("id", "user_seq", "title", "status", "status_display", "is_finished", "error_message", "result_message",
                   "input_type", "input_type_display", "video_name", "video_url", "expected_action", "video_duration_sec",
                   "video_meta", "processing_ms", "total_seconds", "created_at", "predictions")
 

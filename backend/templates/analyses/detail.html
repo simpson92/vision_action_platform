@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}분석 #{{ job.id }}{% endblock %}
+{% block title %}분석 #{{ job.user_seq }}{% endblock %}
 {% block content %}
 <section class="card">
   <p><a href="{% url 'analyses:index' %}">← 분석 화면</a></p>
-  <h1>분석 #{{ job.id }} {% if job.title %}· {{ job.title }}{% endif %}</h1>
+  <h1>분석 #{{ job.user_seq }} {% if job.user != request.user %}<span class="muted">({{ job.user.username }})</span> {% endif %}{% if job.title %}· {{ job.title }}{% endif %}</h1>
   <table class="kv">
     <tr><th>요청 사용자</th><td>{{ job.user.username }}</td></tr>
     <tr><th>입력 방식</th><td>{{ job.get_input_type_display }}{% if job.capture_seconds %} ({{ job.capture_seconds|floatformat:0 }}초 수집){% endif %}</td></tr>

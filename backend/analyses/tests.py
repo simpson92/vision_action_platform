@@ -125,6 +125,15 @@ class AnalysisApiTests(TestCase):
         self.assertEqual(self.client.get(reverse("analyses:detail", args=[job_b.pk])).status_code, 404)
         self.assertEqual(self.client.get("/api/analyses/").json()["count"], 0)
 
+    # 화면 번호는 사용자마다 1부터 이어짐 (A: 1,2,3 / B: 1,2). 주소·API는 DB id 그대로
+    def test_user_seq_counts_per_user(self):
+        a1, b1, a2, b2, a3 = (self.create_job(u) for u in (self.a, self.b, self.a, self.b, self.a))
+        self.assertEqual([j.user_seq for j in (a1, a2, a3)], [1, 2, 3])
+        self.assertEqual([j.user_seq for j in (b1, b2)], [1, 2])
+        self.client.force_login(self.b)
+        page = self.client.get(reverse("analyses:detail", args=[b2.pk]))
+        self.assertContains(page, "분석 #2")
+
     def test_patch_only_changes_title_and_memo(self):
         job = self.create_job(self.a)
         self.client.force_login(self.a)

@@ -53,7 +53,7 @@ class AnalysisJobViewSet(
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         # 분석이 끝날 때까지 기다리지 않고 작업 ID를 바로 돌려줍니다.
-        return Response({"id": serializer.instance.pk, "status": serializer.instance.status}, status=status.HTTP_202_ACCEPTED)
+        return Response({"id": serializer.instance.pk, "user_seq": serializer.instance.user_seq, "status": serializer.instance.status}, status=status.HTTP_202_ACCEPTED)
 
     @action(detail=False, methods=["post"])
     def clear(self, request):

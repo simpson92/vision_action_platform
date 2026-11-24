@@ -77,7 +77,7 @@
     const name = job.title || job.video_name || job.input_type_display || "";
     const who = person && (job.predictions || []).length > 1 ? ` · 사람 #${person.track_id} (카드를 눌러 바꾸기)` : "";
     document.getElementById("focus-text").innerHTML =
-      `지금 보고 있는 분석: <b>#${job.id}</b> ${escapeHtml(name)}${who}`;
+      `지금 보고 있는 분석: <b>#${job.user_seq ?? job.id}</b> ${escapeHtml(name)}${who}`;
 
     const d = (person && person.details) || {};
     const meta = job.video_meta || {};
@@ -368,7 +368,7 @@
       });
       const body = await res.json();
       if (!res.ok) throw new Error(flattenErrors(body));
-      startTracking(body.id, data.get("expected_action") || "");
+      startTracking(body.id, body.user_seq, data.get("expected_action") || "");
     } catch (err) {
       showFormError(err.message || "요청에 실패했습니다.");
     } finally {
@@ -390,7 +390,7 @@
 
   // ---- 상태 조회 (HTTP Polling) ----
   let timer = null;
-  function startTracking(id, expected) {
+  function startTracking(id, seq, expected) {
     clearTimeout(timer);
     document.getElementById("result-empty").hidden = true;
     document.getElementById("result-body").hidden = false;
@@ -400,8 +400,8 @@
     document.getElementById("detail-link").href = `/analyses/${id}/`;
     setSteps("PENDING");
     if (inputType.value === "ip_webcam") startPreview();
-    document.getElementById("result-meta").textContent = `작업 #${id} 등록됨`;
-    upsertHistory({ id, status: "PENDING", status_display: "대기", predictions: [], expected_action: expected });
+    document.getElementById("result-meta").textContent = `작업 #${seq ?? id} 등록됨`;
+    upsertHistory({ id, user_seq: seq, status: "PENDING", status_display: "대기", predictions: [], expected_action: expected });
     poll(id, 0);
   }
 
@@ -437,7 +437,7 @@
   function render(job) {
     setSteps(job.status);
     updateCam(job);
-    document.getElementById("result-meta").textContent = `작업 #${job.id} · ${job.status_display}`;
+    document.getElementById("result-meta").textContent = `작업 #${job.user_seq ?? job.id} · ${job.status_display}`;
 
     const errorBox = document.getElementById("result-error");
     if (job.status === "FAILURE") {
@@ -528,11 +528,12 @@
     if (!row) {
       row = document.createElement("tr");
       row.dataset.id = job.id;
+      row.dataset.seq = job.user_seq ?? job.id;
       row.dataset.expected = job.expected_action || "";
       row.className = "pick";
       const now = new Date();
       const two = (n) => String(n).padStart(2, "0");
-      row.innerHTML = `<td>${job.id}</td><td>${two(now.getMonth() + 1)}/${two(now.getDate())} ${two(now.getHours())}:${two(now.getMinutes())}</td>
+      row.innerHTML = `<td>${row.dataset.seq}</td><td>${two(now.getMonth() + 1)}/${two(now.getDate())} ${two(now.getHours())}:${two(now.getMinutes())}</td>
         <td>${inputType.value === "upload" ? "영상 업로드" : "IP Webcam"}</td><td></td><td></td><td><span class="muted">-</span></td><td></td>
         <td class="actions"><a href="/analyses/${job.id}/">상세</a> <button type="button" class="link danger del-job">삭제</button></td>`;
       tbody.prepend(row);
@@ -569,7 +570,7 @@
       return;
     }
     const row = btn.closest("tr");
-    if (!confirm(`분석 #${row.dataset.id} 기록과 영상을 삭제할까요?`)) return;
+    if (!confirm(`분석 #${row.dataset.seq || row.dataset.id} 기록과 영상을 삭제할까요?`)) return;
     btn.disabled = true;
     const res = await fetch(`/api/analyses/${row.dataset.id}/`, {
       method: "DELETE", credentials: "same-origin", headers: { "X-CSRFToken": csrf },

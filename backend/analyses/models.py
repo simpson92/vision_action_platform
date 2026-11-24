@@ -3,7 +3,8 @@
 회원 테이블은 Django 기본 auth_user를 그대로 씁니다.
 """
 from django.conf import settings
-from django.db import models
+from django.contrib.auth import get_user_model
+from django.db import models, transaction
 
 ACTION_CHOICES = [
     ("bend_return", "허리 굽혔다 펴기"),
@@ -28,6 +29,8 @@ class AnalysisJob(models.Model):
         FAILURE = "FAILURE", "실패"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="analysis_jobs")
+    # 화면에 보이는 번호: 사용자마다 1, 2, 3… (DB 기본키 id는 주소·API·Celery용으로 그대로 씀)
+    user_seq = models.PositiveIntegerField("내 분석 번호", default=0, editable=False)
     title = models.CharField("제목", max_length=100, blank=True)
     memo = models.TextField("메모", blank=True)
     input_type = models.CharField("입력 방식", max_length=20, choices=InputType.choices)
@@ -55,9 +58,20 @@ class AnalysisJob(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [models.Index(fields=["user", "-created_at"])]
+        constraints = [models.UniqueConstraint(fields=["user", "user_seq"], name="unique_seq_per_user")]
 
     def __str__(self):
-        return f"#{self.pk} {self.get_input_type_display()} {self.status}"
+        return f"{self.user.username} #{self.user_seq} {self.get_input_type_display()} {self.status}"
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.user_seq:
+            with transaction.atomic():
+                # 같은 사용자가 동시에 두 건을 올려도 번호가 겹치지 않게 사용자 행을 잠그고 다음 번호를 정함
+                get_user_model().objects.select_for_update().filter(pk=self.user_id).first()
+                last = AnalysisJob.objects.filter(user_id=self.user_id).aggregate(m=models.Max("user_seq"))["m"] or 0
+                self.user_seq = last + 1
+                return super().save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     @property
     def is_finished(self):
