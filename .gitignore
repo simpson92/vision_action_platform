@@ -17,6 +17,8 @@ db.sqlite3
 
 # 영상·대용량 파일
 *.mp4
+# 시연용 샘플 영상(S03, 학습에 쓰지 않은 사람)만 포함
+!backend/static/samples/*.mp4
 *.avi
 *.mov
 *.mkv

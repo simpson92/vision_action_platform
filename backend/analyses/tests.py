@@ -186,6 +186,18 @@ class AnalysisApiTests(TestCase):
         self.assertContains(r, "카메라 1")
         self.assertNotContains(r, "cam.local")  # 카메라 주소는 화면에 노출하지 않음
 
+    # 한 번 클릭 샘플 영상: 6개 동작 버튼이 있고 파일이 저장소에 있음 (학습용 S01이 아닌 S03)
+    def test_sample_videos_listed_and_present(self):
+        from django.conf import settings
+        from .page_views import SAMPLE_VIDEOS
+        self.client.force_login(self.a)
+        r = self.client.get(reverse("analyses:index"))
+        self.assertEqual(r.content.decode().count('class="chip-btn sample-btn"'), 6)
+        for path, action in SAMPLE_VIDEOS:
+            self.assertTrue((settings.BASE_DIR / "static" / path).is_file(), path)
+            self.assertNotIn("S01", path)
+            self.assertContains(r, f'data-action="{action}"')
+
     # IP Webcam 미리보기: 허용 목록 번호로만, 서버가 사진을 대신 받아 전달 (주소 비노출)
     @mock.patch("analyses.page_views.requests.get")
     def test_camera_snapshot_proxy(self, get):

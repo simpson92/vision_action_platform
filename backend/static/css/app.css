@@ -236,3 +236,7 @@ a.chip-btn:hover { text-decoration: none; }
 .title-edit .pen { color: var(--muted); font-size: .8rem; opacity: .5; }
 .title-edit:hover .pen, .title-edit:focus .pen { opacity: 1; color: var(--primary2); }
 .title-input { width: 14em; padding: .25rem .45rem; border: 1.5px solid var(--primary); border-radius: 6px; background: var(--input); color: var(--text); font: inherit; }
+
+/* 한 번 클릭 샘플 영상 */
+.samples { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; margin: .55rem 0 0; }
+.samples .muted { font-size: .8rem; margin-right: .2rem; }

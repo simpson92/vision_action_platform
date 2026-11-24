@@ -321,11 +321,20 @@
     }
   }
 
-  // ---- 업로드 미리보기 ----
+  // ---- 업로드 미리보기 (여러 개면 첫 영상을 보여 주고 이름을 나열) ----
+  const MAX_FILES = 10;
   fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
+    const files = [...fileInput.files];
+    const file = files[0];
     if (!file) return;
-    dropText.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) · 끌어다 놓아 교체`;
+    const mb = (f) => `${(f.size / 1024 / 1024).toFixed(1)}MB`;
+    if (files.length === 1) {
+      dropText.textContent = `${file.name} (${mb(file)}) · 끌어다 놓아 교체`;
+    } else {
+      const names = files.slice(0, 4).map((f) => f.name).join(", ") + (files.length > 4 ? ` 외 ${files.length - 4}개` : "");
+      dropText.textContent = `영상 ${files.length}개: ${names} · 각각 따로 분석해요` + (files.length > MAX_FILES ? ` (한 번에 ${MAX_FILES}개까지)` : "");
+    }
+    if (preview.src.startsWith("blob:")) URL.revokeObjectURL(preview.src);
     preview.src = URL.createObjectURL(file);
     preview.hidden = false;
   });
@@ -353,31 +362,93 @@
   // 칸 밖에 잘못 놓아도 브라우저가 영상을 새 탭으로 열지 않게 막음
   ["dragover", "drop"].forEach((name) => window.addEventListener(name, (event) => event.preventDefault()));
 
-  // ---- 분석 시작 ----
+  // ---- 분석 시작: 영상 여러 개면 각각 작업을 만들고, 첫 작업을 위 결과 카드에 보여 줌 ----
+  async function submitJob(data) {
+    const res = await fetch("/api/analyses/", {
+      method: "POST", body: data, headers: { "X-CSRFToken": csrf }, credentials: "same-origin",
+    });
+    const body = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    if (!res.ok) throw new Error(flattenErrors(body));
+    return body;
+  }
+  const stem = (name) => name.replace(/\.[^.]+$/, "");
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     formError.hidden = true;
-    if (inputType.value === "upload" && !fileInput.files.length) {
+    const files = [...fileInput.files];
+    if (inputType.value === "upload" && !files.length) {
       return showFormError("분석할 영상을 선택해 주세요.");
     }
-    const data = new FormData(form);
-    if (inputType.value !== "upload") data.delete("video");
-    if (inputType.value !== "ip_webcam") data.delete("camera_index");
+    if (inputType.value === "upload" && files.length > MAX_FILES) {
+      return showFormError(`한 번에 ${MAX_FILES}개까지 올릴 수 있습니다.`);
+    }
+    const base = new FormData(form);
+    base.delete("video");
+    if (inputType.value !== "ip_webcam") base.delete("camera_index");
+    const title = (base.get("title") || "").trim();
+    const expected = base.get("expected_action") || "";
 
     startBtn.disabled = true;
-    startBtn.textContent = inputType.value === "upload" ? "업로드 중…" : "작업 등록 중…";
+    const errors = [];
     try {
-      const res = await fetch("/api/analyses/", {
-        method: "POST", body: data, headers: { "X-CSRFToken": csrf }, credentials: "same-origin",
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(flattenErrors(body));
-      startTracking(body.id, body.user_seq, data.get("expected_action") || "", data.get("title") || "");
+      if (inputType.value !== "upload") {
+        startBtn.textContent = "작업 등록 중…";
+        const body = await submitJob(base);
+        startTracking(body.id, body.user_seq, expected, title);
+      } else {
+        let first = true;
+        for (const [i, file] of files.entries()) {
+          startBtn.textContent = files.length > 1 ? `업로드 중… (${i + 1}/${files.length})` : "업로드 중…";
+          const data = new FormData();
+          for (const [k, v] of base.entries()) data.append(k, v);
+          data.set("video", file);
+          // 여러 개일 때 제목: 입력한 제목 + 번호, 비어 있으면 파일 이름
+          const jobTitle = files.length > 1 ? (title ? `${title} (${i + 1})` : stem(file.name)).slice(0, 100) : title;
+          data.set("title", jobTitle);
+          try {
+            const body = await submitJob(data);
+            startTracking(body.id, body.user_seq, expected, jobTitle, first);
+            first = false;
+          } catch (err) {
+            errors.push(`${file.name}: ${err.message}`);
+          }
+        }
+      }
     } catch (err) {
-      showFormError(err.message || "요청에 실패했습니다.");
+      errors.push(err.message || "요청에 실패했습니다.");
     } finally {
       startBtn.disabled = false;
       startBtn.textContent = "AI 분석 시작";
+    }
+    if (errors.length) showFormError(errors.join(" / "));
+  });
+
+  // ---- 한 번 클릭 샘플 영상: 저장소에 넣어 둔 S03 영상을 받아 업로드와 똑같이 분석 ----
+  document.getElementById("samples")?.addEventListener("click", async (event) => {
+    const btn = event.target.closest(".sample-btn");
+    if (!btn) return;
+    formError.hidden = true;
+    btn.disabled = true;
+    try {
+      const res = await fetch(btn.dataset.src, { credentials: "same-origin" });
+      if (!res.ok) throw new Error(`샘플 영상을 불러오지 못했습니다 (HTTP ${res.status})`);
+      const name = btn.dataset.src.split("/").pop();
+      const file = new File([await res.blob()], name, { type: "video/mp4" });
+      preview.src = btn.dataset.src;
+      preview.hidden = false;
+      dropText.textContent = `샘플: ${btn.dataset.label} (${name})`;
+      const data = new FormData();
+      data.set("input_type", "upload");
+      data.set("video", file);
+      data.set("title", `샘플 · ${btn.dataset.label}`);
+      data.set("expected_action", btn.dataset.action);
+      const body = await submitJob(data);
+      startTracking(body.id, body.user_seq, btn.dataset.action, `샘플 · ${btn.dataset.label}`);
+    } catch (err) {
+      showFormError(err.message || "샘플 분석을 시작하지 못했습니다.");
+    } finally {
+      btn.disabled = false;
     }
   });
 

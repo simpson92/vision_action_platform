@@ -10,7 +10,18 @@ from django.views.decorators.cache import never_cache
 import requests
 
 from .filters import filter_jobs, read_filters
-from .models import ACTION_CHOICES, AnalysisJob, PersonPrediction
+from .models import ACTION_CHOICES, ACTION_LABELS, AnalysisJob, PersonPrediction
+
+
+# 한 번 클릭 샘플 영상: 학습에 쓰지 않은 S03 영상 (파일 이름의 A001~A006 = 동작 번호)
+SAMPLE_VIDEOS = [
+    ("samples/S03_A001.mp4", "bend_return"),
+    ("samples/S03_A002.mp4", "leg_raise_lower"),
+    ("samples/S03_A003.mp4", "walk_turn_walk"),
+    ("samples/S03_A004.mp4", "drink_return"),
+    ("samples/S03_A005.mp4", "sit_stand"),
+    ("samples/S03_A006.mp4", "wave"),
+]
 
 
 @login_required
@@ -26,6 +37,7 @@ def index(request):
         "capture_seconds": settings.IP_WEBCAM_CAPTURE_SECONDS,
         "actions": ACTION_CHOICES,
         "recent": recent,
+        "samples": [{"path": path, "action": key, "label": ACTION_LABELS[key]} for path, key in SAMPLE_VIDEOS],
         "filters": filters,
         "filtering": filtering,
         "matched_count": matched.count() if filtering else None,

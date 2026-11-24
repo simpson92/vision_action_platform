@@ -29,9 +29,13 @@
 
       <div class="pane" data-pane="upload">
         <label class="drop" id="drop">
-          <input type="file" name="video" accept="video/*">
-          <span id="drop-text">MP4 영상을 끌어다 놓거나 눌러서 선택 (최대 {{ max_upload_mb }}MB)</span>
+          <input type="file" name="video" accept="video/*" multiple>
+          <span id="drop-text">MP4 영상을 끌어다 놓거나 눌러서 선택 (여러 개 가능, 한 개 최대 {{ max_upload_mb }}MB)</span>
         </label>
+        <div class="samples" id="samples">
+          <span class="muted">샘플 영상으로 바로 분석</span>
+          {% for s in samples %}<button type="button" class="chip-btn sample-btn" data-src="{% static s.path %}" data-action="{{ s.action }}" data-label="{{ s.label }}">{{ s.label }}</button>{% endfor %}
+        </div>
         <video id="preview" controls muted hidden></video>
       </div>
 
