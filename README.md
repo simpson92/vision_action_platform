@@ -265,72 +265,47 @@ sequenceDiagram
 
 ## 7. 실행 결과와 검증
 
-### 모델 재사용 검증 (5일차 영상 12개)
+#### 📊 모델 재사용 검증
 
-`ai_service/scripts/evaluate_videos.py`로 S02(검증용 사람)·S03(테스트용 사람) 영상을 서비스와 같은 코드로 분석했습니다. 결과 원본: [`docs/evaluation_S02_S03.txt`](docs/evaluation_S02_S03.txt)
+<p align="center"><img src="docs/images/cards/eval.png" width="100%" alt="모델 재사용 검증"></p>
 
-| 방식 | S02 Top-1 | S03 Top-1 | 판단 확정한 결과의 정답률 |
-|---|---|---|---|
-| 6일차 그대로 (전체 구간 1회, 기준 0.55) | 2/6 | 6/6 | 0건 확정 (전부 UNKNOWN) |
-| **이 서비스** (전체 구간 + 2초 Window 평균, margin 기준) | **4/6** | 5/6 | **5건 확정, 5건 정답** |
+5일차 영상 12개(S02 검증용, S03 테스트용)를 서비스와 같은 코드로 분석했습니다(`ai_service/scripts/evaluate_videos.py`, 결과 [`docs/evaluation_S02_S03.txt`](docs/evaluation_S02_S03.txt)). 기준값은 **S02로만** 골랐고 S03은 마지막 확인에만 썼습니다. 틀린 답은 모두 1·2등 차이가 작아 "판단 보류"로 표시됐고, 확정한 답은 모두 맞았습니다. 효과가 없어 반영하지 않은 실험은 [`docs/inference_experiments.md`](docs/inference_experiments.md)에 있습니다.
 
-- 방식과 기준값은 **S02로만** 골랐고 S03은 마지막 확인에만 썼습니다(테스트 데이터로 튜닝하지 않음).
-- 오답은 모두 1·2등 차이가 작아 "판단 보류"로 표시됐습니다. 확정한 결과는 모두 맞았습니다.
-- 좌우 반전 예측 평균, 구간 길이 섞기, fps 영향도 같은 방법(S02로만 비교)으로 시험했지만 분명히 좋아지지 않아 반영하지 않았습니다: [`docs/inference_experiments.md`](docs/inference_experiments.md)
+#### 🖥️ 실행 화면
 
-> 과제 12장이 요구하는 캡처 4장(정상 분석·오류·관리자 화면·대시보드)에, 이 서비스의 특징인 "판단 보류" 1장을 더했습니다. 캡처는 시연 PC(Windows + WSL2 Docker)에서 5개 서비스를 띄우고 찍었고, "판단 보류"만 같은 코드로 개발 환경에서 찍었습니다. 이미지를 누르면 원본 크기로 열립니다.
+과제가 요구하는 화면 4개(정상 분석·오류·관리자 화면·대시보드)에 "판단 보류" 1개를 더했습니다. 카드를 누르면 원본 캡처가 열립니다.
 
-### ① 정상 분석
+<p align="center"><a href="docs/images/analysis.png"><img src="docs/images/cards/case1.png" width="100%" alt="정상 분석"></a></p>
+<p align="center"><a href="docs/images/failure.png"><img src="docs/images/cards/case2.png" width="100%" alt="오류·실패"></a></p>
+<p align="center"><a href="docs/images/admin_jobs.png"><img src="docs/images/cards/case3.png" width="100%" alt="관리자 화면"></a></p>
+<p align="center"><a href="docs/images/dashboard.png"><img src="docs/images/cards/case4.png" width="100%" alt="관리자 대시보드"></a></p>
+<p align="center"><a href="docs/images/uncertain.png"><img src="docs/images/cards/case5.png" width="100%" alt="판단 보류"></a></p>
 
-<p align="center"><a href="docs/images/analysis.png"><img src="docs/images/analysis.png" width="820" alt="정상 분석"></a></p>
+> [!NOTE]
+> 캡처는 시연 PC(Windows + WSL2 Docker)에서 5개 서비스를 띄우고 찍었습니다. "판단 보류"만 같은 코드로 개발 환경에서 찍었습니다. 일반 회원이 `/admin/`에 들어가면 [접근이 막힙니다](docs/images/admin_denied.png).
 
-> **입력** 영상 업로드 탭에 `S03_A006_T01.mp4`(손 흔들기)<br>
-> **결과** 사람 #1 **손 흔들기**, Confidence 33.0%(무작위 16.7%의 2.0배), 2등과 차이 14.1%p, 2초 구간 6개 모두 같은 답, 관절 인식 0.97, AI 처리 4.0초
+#### ✅ 기능 테스트 (T01~T10)
 
-### ② 오류·실패
-
-<p align="center"><a href="docs/images/failure.png"><img src="docs/images/failure.png" width="820" alt="실패"></a></p>
-
-> **입력** IP Webcam 탭에서 카메라 1로 분석 시작(휴대폰 앱이 꺼져 있음)<br>
-> **결과** **실패**, "카메라에 연결하지 못했습니다. 휴대폰 IP Webcam 앱이 켜져 있고 같은 Wi-Fi인지 확인해 주세요." 실패한 작업도 사유와 함께 이력에 남음
-
-### ③ 관리자 화면 (Django Admin)
-
-<p align="center"><a href="docs/images/admin_jobs.png"><img src="docs/images/admin_jobs.png" width="820" alt="Admin 작업 목록"></a></p>
-
-> **입력** 관리자 계정으로 `/admin/` → 분석 작업<br>
-> **결과** 전체 사용자의 작업 목록: 사용자·입력 방식·상태·사람별 결과·AI 처리 시간, 상태·입력 방식·동작·날짜 필터. 일반 회원은 접근 불가 ([캡처](docs/images/admin_denied.png))
-
-### ④ 관리자 대시보드
-
-<p align="center"><a href="docs/images/dashboard.png"><img src="docs/images/dashboard.png" width="820" alt="대시보드"></a></p>
-
-> **입력** 관리자 계정으로 `/dashboard/`<br>
-> **결과** 전체 사용자 누적 통계: 동작별 예측 건수(막대), 작업 상태별 건수(도넛), 입력 방식별 건수·평균 AI 처리 시간
-
-### + 판단 보류 (AI가 답을 미룬 경우)
-
-<p align="center"><a href="docs/images/uncertain.png"><img src="docs/images/uncertain.png" width="820" alt="판단 보류"></a></p>
-
-> **입력** 영상 업로드 탭에 `S03_A005_T01.mp4`(앉았다 일어나기)<br>
-> **결과** 1등 손 흔들기 22.2%와 2등 앉았다 일어나기 21%의 차이가 1.2%p로 기준(3%p) 미만이라 **판단 보류**. 틀린 답을 확정하는 대신 보류함
-
-### 기능 테스트 (과제 11장)
-
-스샷을 누르면 원본 크기로 열립니다.
-
-| 테스트 | 스샷 |
-|---|:---:|
-| **T01 모델 불러오기**<br><br>FastAPI가 시작할 때 6일차 RandomForest 모델과 설정 JSON을 불러오고 상태를 알려 줌<br><br>**확인 방법**<br>`GET /health`<br>`test_health_model_ready`<br><br>**기대 결과**<br>6개 Class, 1,140개 Feature 조건 일치<br><br>**결과** Pass | <a href="docs/images/t01_health.png"><img src="docs/images/tests/t01.png" width="560" alt="T01"></a> |
-| **T02 영상 업로드**<br><br>MP4를 올리면 작업이 등록되고 사람별 동작 결과가 화면에 표시됨<br><br>**확인 방법**<br>`S03_A006_T01.mp4` 업로드<br><br>**기대 결과**<br>작업 등록 → 결과 또는 명확한 실패 사유<br><br>**결과** Pass | <a href="docs/images/analysis.png"><img src="docs/images/tests/t02.png" width="560" alt="T02"></a> |
-| **T03 IP Webcam**<br><br>휴대폰 IP Webcam 영상을 미리 보며 몇 초 녹화해 분석 요청<br><br>**확인 방법**<br>휴대폰 IP Webcam으로 8초 녹화<br><br>**기대 결과**<br>짧은 영상 수집·분석 요청 성공<br><br>**결과**  |  |
-| **T04 사람별 결과**<br><br>한 영상에서 여러 사람을 Track ID로 나눠 사람마다 결과를 저장<br><br>**확인 방법**<br>`S02_A001` 영상(뒤에 사람 1명 더)<br><br>**기대 결과**<br>한 작업에 Track ID별 결과 분리 (#13: 2건)<br><br>**결과** Pass | <a href="docs/images/admin_predictions.png"><img src="docs/images/tests/t04.png" width="560" alt="T04"></a> |
-| **T05 비동기 처리**<br><br>분석은 Celery Worker가 맡고 웹 서버는 기다리지 않고 바로 응답<br><br>**확인 방법**<br>`test_create_returns_job_id_immediately`<br>요청 직후 화면<br><br>**기대 결과**<br>202와 작업 ID 즉시 반환, 상태 "처리 중"<br><br>**결과** Pass | <a href="docs/images/t05_async.png"><img src="docs/images/tests/t05.png" width="560" alt="T05"></a> |
-| **T06 영구 저장**<br><br>작업과 사람별 예측이 PostgreSQL에 남아 새로고침해도 이력에 보임<br><br>**확인 방법**<br>`test_task_saves_predictions`<br>분석 후 새로고침<br><br>**기대 결과**<br>같은 작업·예측 결과가 DB에 남아 있음<br><br>**결과** Pass | <a href="docs/images/history.png"><img src="docs/images/tests/t06.png" width="560" alt="T06"></a> |
-| **T07 CRUD 권한**<br><br>일반 회원은 본인 작업만 조회·수정·삭제할 수 있음<br><br>**확인 방법**<br>`test_user_cannot_touch_others_job`<br>남의 작업 주소 직접 열기<br><br>**기대 결과**<br>다른 회원 작업은 404로 막힘<br><br>**결과** Pass | <a href="docs/images/t07_forbidden.png"><img src="docs/images/tests/t07.png" width="560" alt="T07"></a> |
-| **T08 관리자**<br><br>관리자만 전체 작업 목록과 상태별 차트를 봄 ([일반 회원 차단](docs/images/admin_denied.png))<br><br>**확인 방법**<br>`test_dashboard_admin_only`<br>관리자로 `/dashboard/`<br><br>**기대 결과**<br>전체 작업 목록·상태별 차트 확인<br><br>**결과** Pass | <a href="docs/images/dashboard.png"><img src="docs/images/tests/t08.png" width="560" alt="T08"></a> |
-| **T09 예외 처리**<br><br>카메라 연결 실패나 잘못된 파일을 사용자용 문장으로 알리고 실패 상태를 저장<br><br>**확인 방법**<br>`test_task_failure_is_saved`<br>`test_camera_failure_is_saved`<br>꺼진 카메라로 분석<br><br>**기대 결과**<br>FAILURE와 사용자용 사유 저장<br><br>**결과** Pass | <a href="docs/images/failure.png"><img src="docs/images/tests/t09.png" width="560" alt="T09"></a> |
-| **T10 Docker**<br><br>컨테이너를 다시 켜도 PostgreSQL 데이터가 남고 서비스끼리 다시 연결됨<br><br>**확인 방법**<br>`docker compose restart` 후 `ps`, 이력 재조회<br><br>**기대 결과**<br>5개 서비스 Up, 데이터 유지<br><br>**결과** Pass | <a href="docs/images/t10_restart.png"><img src="docs/images/tests/t10.png" width="560" alt="T10"></a> |
+<p align="center">
+<a href="docs/images/t01_health.png"><img src="docs/images/cards/t01.png" width="49%" alt="T01"></a>
+<a href="docs/images/analysis.png"><img src="docs/images/cards/t02.png" width="49%" alt="T02"></a>
+</p>
+<p align="center">
+<img src="docs/images/cards/t03.png" width="49%" alt="T03">
+<a href="docs/images/admin_predictions.png"><img src="docs/images/cards/t04.png" width="49%" alt="T04"></a>
+</p>
+<p align="center">
+<a href="docs/images/t05_async.png"><img src="docs/images/cards/t05.png" width="49%" alt="T05"></a>
+<a href="docs/images/history.png"><img src="docs/images/cards/t06.png" width="49%" alt="T06"></a>
+</p>
+<p align="center">
+<a href="docs/images/t07_forbidden.png"><img src="docs/images/cards/t07.png" width="49%" alt="T07"></a>
+<a href="docs/images/dashboard.png"><img src="docs/images/cards/t08.png" width="49%" alt="T08"></a>
+</p>
+<p align="center">
+<a href="docs/images/failure.png"><img src="docs/images/cards/t09.png" width="49%" alt="T09"></a>
+<a href="docs/images/t10_restart.png"><img src="docs/images/cards/t10.png" width="49%" alt="T10"></a>
+</p>
 
 ## 8. 교재와 다르게 구현한 점과 이유
 
