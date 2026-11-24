@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="300" viewBox="0 0 960 300" font-family="'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070d1f"/><stop offset="1" stop-color="#0c1836"/>
+    </linearGradient>
+    <radialGradient id="c1" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#1b3a7a"/><stop offset="1" stop-color="#0b1838"/></radialGradient>
+    <radialGradient id="c2" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#2a2f8f"/><stop offset="1" stop-color="#121640"/></radialGradient>
+    <radialGradient id="c3" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#4a2a8a"/><stop offset="1" stop-color="#1b1240"/></radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7fb2ff"/></marker>
+  </defs>
+  <rect width="960" height="300" rx="18" fill="url(#bg)"/>
+  <g stroke="#7fb2ff" stroke-width="2" stroke-dasharray="6 6" fill="none" opacity="0.8">
+    <line x1="290" y1="150" x2="365" y2="150" marker-end="url(#arr)"/>
+    <line x1="595" y1="150" x2="670" y2="150" marker-end="url(#arr)"/>
+  </g>
+  <!-- 입력 -->
+  <g transform="translate(180,150)">
+    <circle r="108" fill="url(#c1)" stroke="#4da3ff" stroke-width="3" filter="url(#glow)"/>
+    <text y="-46" text-anchor="middle" font-size="14" fill="#7fb2ff" letter-spacing="3">STEP 1</text>
+    <text y="-14" text-anchor="middle" font-size="28" font-weight="700" fill="#ffffff">입력</text>
+    <text y="22" text-anchor="middle" font-size="16" fill="#d6e4ff">MP4 영상 업로드</text>
+    <text y="46" text-anchor="middle" font-size="16" fill="#d6e4ff">IP Webcam 8초 촬영</text>
+  </g>
+  <!-- 결과 -->
+  <g transform="translate(480,150)">
+    <circle r="108" fill="url(#c2)" stroke="#8a8cff" stroke-width="3" filter="url(#glow)"/>
+    <text y="-46" text-anchor="middle" font-size="14" fill="#a9abff" letter-spacing="3">STEP 2</text>
+    <text y="-14" text-anchor="middle" font-size="28" font-weight="700" fill="#ffffff">결과</text>
+    <text y="22" text-anchor="middle" font-size="16" fill="#e0e1ff">사람별 동작 6종</text>
+    <text y="46" text-anchor="middle" font-size="16" fill="#e0e1ff">Confidence · 판단 근거</text>
+  </g>
+  <!-- 관리 -->
+  <g transform="translate(780,150)">
+    <circle r="108" fill="url(#c3)" stroke="#b07cff" stroke-width="3" filter="url(#glow)"/>
+    <text y="-46" text-anchor="middle" font-size="14" fill="#c9a6ff" letter-spacing="3">STEP 3</text>
+    <text y="-14" text-anchor="middle" font-size="28" font-weight="700" fill="#ffffff">관리</text>
+    <text y="22" text-anchor="middle" font-size="16" fill="#ecdfff">Django Admin</text>
+    <text y="46" text-anchor="middle" font-size="16" fill="#ecdfff">대시보드 통계</text>
+  </g>
+</svg>
