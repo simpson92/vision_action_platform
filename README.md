@@ -296,7 +296,7 @@ sequenceDiagram
 </p>
 <p align="center">
 <a href="docs/images/shots/async.png"><img src="docs/images/cards2/t05.png" width="49%" alt="T05"></a>
-<a href="docs/images/shots/history.png"><img src="docs/images/cards2/t06.png" width="49%" alt="T06"></a>
+<a href="docs/images/shots/history_titles.png"><img src="docs/images/cards2/t06_v2.png" width="49%" alt="T06"></a>
 </p>
 <p align="center">
 <a href="docs/images/t07_forbidden.png"><img src="docs/images/cards2/t07.png" width="49%" alt="T07"></a>
@@ -304,7 +304,7 @@ sequenceDiagram
 </p>
 <p align="center">
 <a href="docs/images/shots/failure.png"><img src="docs/images/cards2/t09.png" width="49%" alt="T09"></a>
-<a href="docs/images/shots/restart.png"><img src="docs/images/cards2/t10.png" width="49%" alt="T10"></a>
+<a href="docs/images/shots/restart_and_history.png"><img src="docs/images/cards2/t10_v2.png" width="49%" alt="T10"></a>
 </p>
 
 ## 8. 교재와 다르게 구현한 점과 이유
