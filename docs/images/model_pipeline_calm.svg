@@ -23,13 +23,13 @@
 <text x="480" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#1f3550">Feature 만들기</text>
 <text x="480" y="211" text-anchor="middle" font-size="11.5" fill="#5a6f88">30 Step × 38</text>
 <text x="480" y="228" text-anchor="middle" font-size="11.5" fill="#5a6f88">= 1,140개</text>
-<circle cx="670" cy="120" r="46" fill="#3f8f8a" fill-opacity="0.12" stroke="#3f8f8a" stroke-width="2.5" filter="url(#glow)"/>
-<g transform="translate(670,120)"><g stroke="#3f8f8a" stroke-width="2.2"><line x1="0" y1="-18" x2="-16" y2="0"/><line x1="0" y1="-18" x2="16" y2="0"/><line x1="-16" y1="0" x2="-24" y2="18"/><line x1="-16" y1="0" x2="-8" y2="18"/><line x1="16" y1="0" x2="8" y2="18"/><line x1="16" y1="0" x2="24" y2="18"/></g><g fill="#ffffff" stroke="#3f8f8a" stroke-width="2.5"><circle cx="0" cy="-18" r="6"/><circle cx="-16" cy="0" r="5.5"/><circle cx="16" cy="0" r="5.5"/></g><g fill="#3f8f8a"><circle cx="-24" cy="20" r="4.5"/><circle cx="-8" cy="20" r="4.5"/><circle cx="8" cy="20" r="4.5"/><circle cx="24" cy="20" r="4.5"/></g></g>
+<circle cx="670" cy="120" r="46" fill="#4f9a6e" fill-opacity="0.12" stroke="#4f9a6e" stroke-width="2.5" filter="url(#glow)"/>
+<g transform="translate(670,120)"><g stroke="#4f9a6e" stroke-width="2.2"><line x1="0" y1="-18" x2="-16" y2="0"/><line x1="0" y1="-18" x2="16" y2="0"/><line x1="-16" y1="0" x2="-24" y2="18"/><line x1="-16" y1="0" x2="-8" y2="18"/><line x1="16" y1="0" x2="8" y2="18"/><line x1="16" y1="0" x2="24" y2="18"/></g><g fill="#ffffff" stroke="#4f9a6e" stroke-width="2.5"><circle cx="0" cy="-18" r="6"/><circle cx="-16" cy="0" r="5.5"/><circle cx="16" cy="0" r="5.5"/></g><g fill="#4f9a6e"><circle cx="-24" cy="20" r="4.5"/><circle cx="-8" cy="20" r="4.5"/><circle cx="8" cy="20" r="4.5"/><circle cx="24" cy="20" r="4.5"/></g></g>
 <text x="670" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#1f3550">Random Forest</text>
 <text x="670" y="211" text-anchor="middle" font-size="11.5" fill="#5a6f88">rf_action_baseline</text>
 <text x="670" y="228" text-anchor="middle" font-size="11.5" fill="#5a6f88">.joblib · 300 trees</text>
-<circle cx="860" cy="120" r="46" fill="#3d6ea5" fill-opacity="0.12" stroke="#3d6ea5" stroke-width="2.5" filter="url(#glow)"/>
-<g transform="translate(860,120)"><text x="0" y="12" text-anchor="middle" font-size="40" font-weight="700" font-family="Consolas,Menlo,monospace" fill="#3d6ea5">{ }</text><g stroke="#1f3550" stroke-width="2.4" stroke-linecap="round"><line x1="-6" y1="-6" x2="8" y2="-6"/><line x1="-6" y1="2" x2="4" y2="2"/><line x1="-6" y1="10" x2="8" y2="10"/></g></g>
+<circle cx="860" cy="120" r="46" fill="#5a6fb0" fill-opacity="0.12" stroke="#5a6fb0" stroke-width="2.5" filter="url(#glow)"/>
+<g transform="translate(860,120)"><text x="0" y="12" text-anchor="middle" font-size="40" font-weight="700" font-family="Consolas,Menlo,monospace" fill="#5a6fb0">{ }</text><g stroke="#1f3550" stroke-width="2.4" stroke-linecap="round"><line x1="-6" y1="-6" x2="8" y2="-6"/><line x1="-6" y1="2" x2="4" y2="2"/><line x1="-6" y1="10" x2="8" y2="10"/></g></g>
 <text x="860" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="#1f3550">사람별 결과</text>
 <text x="860" y="211" text-anchor="middle" font-size="11.5" fill="#5a6f88">track_id · 동작</text>
 <text x="860" y="228" text-anchor="middle" font-size="11.5" fill="#5a6f88">Confidence · 판단 근거</text>
@@ -43,20 +43,20 @@
 <circle cx="361.0" cy="345" r="16" fill="#4f9fbf"/><text x="361.0" y="351" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">2</text>
 <text x="388.0" y="342" font-size="15" font-weight="800" fill="#1f3550">다리 들었다 내리기</text>
 <text x="388.0" y="360" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#4f9fbf">leg_raise_lower</text>
-<rect x="638.0" y="318" width="292.0" height="54" rx="27" fill="#3f8f8a" fill-opacity="0.12" stroke="#3f8f8a" stroke-width="1.8"/>
-<circle cx="665.0" cy="345" r="16" fill="#3f8f8a"/><text x="665.0" y="351" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">3</text>
+<rect x="638.0" y="318" width="292.0" height="54" rx="27" fill="#4f9a6e" fill-opacity="0.12" stroke="#4f9a6e" stroke-width="1.8"/>
+<circle cx="665.0" cy="345" r="16" fill="#4f9a6e"/><text x="665.0" y="351" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">3</text>
 <text x="692.0" y="342" font-size="15" font-weight="800" fill="#1f3550">걷다가 방향 바꿔 걷기</text>
-<text x="692.0" y="360" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#3f8f8a">walk_turn_walk</text>
-<rect x="30.0" y="386" width="292.0" height="54" rx="27" fill="#3d7bb0" fill-opacity="0.12" stroke="#3d7bb0" stroke-width="1.8"/>
-<circle cx="57.0" cy="413" r="16" fill="#3d7bb0"/><text x="57.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">4</text>
+<text x="692.0" y="360" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#4f9a6e">walk_turn_walk</text>
+<rect x="30.0" y="386" width="292.0" height="54" rx="27" fill="#c28a3e" fill-opacity="0.12" stroke="#c28a3e" stroke-width="1.8"/>
+<circle cx="57.0" cy="413" r="16" fill="#c28a3e"/><text x="57.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">4</text>
 <text x="84.0" y="410" font-size="15" font-weight="800" fill="#1f3550">마시고 제자리로</text>
-<text x="84.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#3d7bb0">drink_return</text>
-<rect x="334.0" y="386" width="292.0" height="54" rx="27" fill="#34609c" fill-opacity="0.12" stroke="#34609c" stroke-width="1.8"/>
-<circle cx="361.0" cy="413" r="16" fill="#34609c"/><text x="361.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">5</text>
+<text x="84.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#c28a3e">drink_return</text>
+<rect x="334.0" y="386" width="292.0" height="54" rx="27" fill="#b5646b" fill-opacity="0.12" stroke="#b5646b" stroke-width="1.8"/>
+<circle cx="361.0" cy="413" r="16" fill="#b5646b"/><text x="361.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">5</text>
 <text x="388.0" y="410" font-size="15" font-weight="800" fill="#1f3550">앉았다 일어나기</text>
-<text x="388.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#34609c">sit_stand</text>
-<rect x="638.0" y="386" width="292.0" height="54" rx="27" fill="#3d6ea5" fill-opacity="0.12" stroke="#3d6ea5" stroke-width="1.8"/>
-<circle cx="665.0" cy="413" r="16" fill="#3d6ea5"/><text x="665.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">6</text>
+<text x="388.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#b5646b">sit_stand</text>
+<rect x="638.0" y="386" width="292.0" height="54" rx="27" fill="#5a6fb0" fill-opacity="0.12" stroke="#5a6fb0" stroke-width="1.8"/>
+<circle cx="665.0" cy="413" r="16" fill="#5a6fb0"/><text x="665.0" y="419" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">6</text>
 <text x="692.0" y="410" font-size="15" font-weight="800" fill="#1f3550">손 흔들기</text>
-<text x="692.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#3d6ea5">wave</text>
+<text x="692.0" y="428" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#5a6fb0">wave</text>
 </svg>
