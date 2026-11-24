@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="510" viewBox="0 0 960 510" font-family="'Pretendard','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#070d1f"/><stop offset="1" stop-color="#0c1836"/></linearGradient>
+<linearGradient id="ln" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4da3ff"/><stop offset="1" stop-color="#b18cff"/></linearGradient>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="960" height="510" rx="16" fill="url(#bg)"/>
+<line x1="52" y1="57.0" x2="52" y2="453.0" stroke="url(#ln)" stroke-width="3" stroke-opacity="0.6"/>
+<rect x="88" y="30" width="852" height="54" rx="12" fill="#c3cae6" fill-opacity="0.08" stroke="#c3cae6" stroke-opacity="0.45"/>
+<circle cx="52" cy="57.0" r="17" fill="#c3cae6" filter="url(#glow)"/><text x="52" y="63.0" text-anchor="middle" font-size="16" font-weight="800" fill="#0a1024">1</text>
+<text x="104" y="62.0" font-size="11" font-weight="800" fill="#c3cae6" letter-spacing="1">브라우저</text>
+<text x="190" y="53.0" font-size="15" font-weight="800" fill="#ffffff">버튼 클릭 → 분석 요청</text>
+<text x="190" y="73.0" font-size="12" fill="#c9d6ff">POST /api/analyses/ (영상 또는 카메라 번호)</text>
+<rect x="837" y="46.0" width="95" height="22" rx="11" fill="#c3cae6" fill-opacity="0.2" stroke="#c3cae6"/><text x="884.5" y="61.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">analyses.js</text>
+<rect x="88" y="96" width="852" height="54" rx="12" fill="#2fd39a" fill-opacity="0.08" stroke="#2fd39a" stroke-opacity="0.45"/>
+<circle cx="52" cy="123.0" r="17" fill="#2fd39a" filter="url(#glow)"/><text x="52" y="129.0" text-anchor="middle" font-size="16" font-weight="800" fill="#0a1024">2</text>
+<text x="104" y="128.0" font-size="11" font-weight="800" fill="#2fd39a" letter-spacing="1">DJANGO</text>
+<text x="190" y="119.0" font-size="15" font-weight="800" fill="#ffffff">검증 후 작업 ID 바로 반환</text>
+<text x="190" y="139.0" font-size="12" fill="#c9d6ff">AnalysisJob 저장(PENDING) → 202 + 작업 ID · 잘못된 입력은 400</text>
+<rect x="816" y="112.0" width="116" height="22" rx="11" fill="#2fd39a" fill-opacity="0.2" stroke="#2fd39a"/><text x="874.0" y="127.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">serializers.py</text>
+<rect x="736" y="112.0" width="74" height="22" rx="11" fill="#2fd39a" fill-opacity="0.2" stroke="#2fd39a"/><text x="773.0" y="127.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">views.py</text>
+<rect x="88" y="162" width="852" height="54" rx="12" fill="#ff5a6e" fill-opacity="0.08" stroke="#ff5a6e" stroke-opacity="0.45"/>
+<circle cx="52" cy="189.0" r="17" fill="#ff5a6e" filter="url(#glow)"/><text x="52" y="195.0" text-anchor="middle" font-size="16" font-weight="800" fill="#0a1024">3</text>
+<text x="104" y="194.0" font-size="11" font-weight="800" fill="#ff5a6e" letter-spacing="1">REDIS</text>
+<text x="190" y="185.0" font-size="15" font-weight="800" fill="#ffffff">작업 대기열에 등록</text>
+<text x="190" y="205.0" font-size="12" fill="#c9d6ff">DB 저장이 끝난 뒤(on_commit) run_analysis 등록</text>
+<rect x="858" y="178.0" width="74" height="22" rx="11" fill="#ff5a6e" fill-opacity="0.2" stroke="#ff5a6e"/><text x="895.0" y="193.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">views.py</text>
+<rect x="88" y="228" width="852" height="54" rx="12" fill="#ffab3d" fill-opacity="0.08" stroke="#ffab3d" stroke-opacity="0.45"/>
+<circle cx="52" cy="255.0" r="17" fill="#ffab3d" filter="url(#glow)"/><text x="52" y="261.0" text-anchor="middle" font-size="16" font-weight="800" fill="#0a1024">4</text>
+<text x="104" y="260.0" font-size="11" font-weight="800" fill="#ffab3d" letter-spacing="1">CELERY</text>
+<text x="190" y="251.0" font-size="15" font-weight="800" fill="#ffffff">영상 확보</text>
+<text x="190" y="271.0" font-size="12" fill="#c9d6ff">업로드 파일 읽기 · IP Webcam이면 8초 수집해 MP4로</text>
+<rect x="795" y="244.0" width="137" height="22" rx="11" fill="#ffab3d" fill-opacity="0.2" stroke="#ffab3d"/><text x="863.5" y="259.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">camera_capture.py</text>
+<rect x="715" y="244.0" width="74" height="22" rx="11" fill="#ffab3d" fill-opacity="0.2" stroke="#ffab3d"/><text x="752.0" y="259.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">tasks.py</text>
+<rect x="88" y="294" width="852" height="54" rx="12" fill="#38bdf8" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.45"/>
+<circle cx="52" cy="321.0" r="17" fill="#38bdf8" filter="url(#glow)"/><text x="52" y="327.0" text-anchor="middle" font-size="16" font-weight="800" fill="#0a1024">5</text>
+<text x="104" y="326.0" font-size="11" font-weight="800" fill="#38bdf8" letter-spacing="1">FASTAPI</text>
+<text x="190" y="317.0" font-size="15" font-weight="800" fill="#ffffff">AI 추론</text>
+<text x="190" y="337.0" font-size="12" fill="#c9d6ff">Pose·Tracking → 1,140 Feature → RF → JSON</text>
+<rect x="781" y="310.0" width="151" height="22" rx="11" fill="#38bdf8" fill-opacity="0.2" stroke="#38bdf8"/><text x="856.5" y="325.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">action_inference.py</text>
+<rect x="645" y="310.0" width="130" height="22" rx="11" fill="#38bdf8" fill-opacity="0.2" stroke="#38bdf8"/><text x="710.0" y="325.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">pose_pipeline.py</text>
+<rect x="523" y="310.0" width="116" height="22" rx="11" fill="#38bdf8" fill-opacity="0.2" stroke="#38bdf8"/><text x="581.0" y="325.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">predictions.py</text>
+<rect x="88" y="360" width="852" height="54" rx="12" fill="#a78bfa" fill-opacity="0.08" stroke="#a78bfa" stroke-opacity="0.45"/>
+<circle cx="52" cy="387.0" r="17" fill="#a78bfa" filter="url(#glow)"/><text x="52" y="393.0" text-anchor="middle" font-size="16" font-weight="800" fill="#0a1024">6</text>
+<text x="104" y="392.0" font-size="11" font-weight="800" fill="#a78bfa" letter-spacing="1">POSTGRES</text>
+<text x="190" y="383.0" font-size="15" font-weight="800" fill="#ffffff">결과 저장</text>
+<text x="190" y="403.0" font-size="12" fill="#c9d6ff">사람별 PersonPrediction 저장 · 작업 SUCCESS / FAILURE</text>
+<rect x="858" y="376.0" width="74" height="22" rx="11" fill="#a78bfa" fill-opacity="0.2" stroke="#a78bfa"/><text x="895.0" y="391.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">tasks.py</text>
+<rect x="88" y="426" width="852" height="54" rx="12" fill="#c3cae6" fill-opacity="0.08" stroke="#c3cae6" stroke-opacity="0.45"/>
+<circle cx="52" cy="453.0" r="17" fill="#c3cae6" filter="url(#glow)"/><text x="52" y="459.0" text-anchor="middle" font-size="16" font-weight="800" fill="#0a1024">7</text>
+<text x="104" y="458.0" font-size="11" font-weight="800" fill="#c3cae6" letter-spacing="1">브라우저</text>
+<text x="190" y="449.0" font-size="15" font-weight="800" fill="#ffffff">상태·결과 조회</text>
+<text x="190" y="469.0" font-size="12" fill="#c9d6ff">1초 간격 GET …/status/ → 사람별 카드 · 지표 4개 · 그래프 2개</text>
+<rect x="837" y="442.0" width="95" height="22" rx="11" fill="#c3cae6" fill-opacity="0.2" stroke="#c3cae6"/><text x="884.5" y="457.0" text-anchor="middle" font-size="11.5" font-family="Consolas,Menlo,monospace" fill="#ffffff">analyses.js</text>
+</svg>
