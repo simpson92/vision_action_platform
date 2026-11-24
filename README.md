@@ -227,6 +227,17 @@ sequenceDiagram
 
 영상에서 사람마다 관절 17개를 찾고(YOLO11 Pose), 30 Step 동안의 움직임을 1,140개 숫자로 바꾼 뒤 Random Forest가 6개 동작 중 하나로 분류합니다. 모델 파일은 모두 `ai_service/models/`에 있습니다.
 
+> [!IMPORTANT]
+> `rf_action_baseline.joblib`은 영상을 그대로 받지 못합니다. 학습 때 넣은 것과 똑같은 **1,140개 숫자(30 Step × 38 Feature, 같은 순서)**만 받습니다. 그래서 6~8일차 실습에서 쓴 자세 추출·Feature 코드를 그대로 가져와, 영상에서 학습 때와 같은 방식으로 입력을 만듭니다.
+
+| 실습에서 가져온 것 | 하는 일 | 서비스에서 쓰는 곳 |
+|---|---|---|
+| `rf_action_baseline.joblib` | 학습된 Random Forest (6 Class) | `services/model_loader.py`가 해시 확인 후 로드 |
+| `rf_feature_columns.json` | 1,140개 Feature 이름과 순서 | 로드할 때 모델의 순서와 같은지 검사 |
+| `rf_training_info.json` | Class 6개, 30 Step, Feature 1,140 등 학습 조건 | 로드할 때 모델과 맞는지 검사, 입력 길이(30 Step)로 사용 |
+| `src/pose_utils.py` · `feature_utils.py` · `multi_person_utils.py` | 관절 정규화·각도 등 38개 Feature 계산 | `services/pose_pipeline.py` |
+| `src/sequence_utils.py` | Frame들을 30 Step으로 맞추고 1줄로 펼치기 | `services/action_inference.py` |
+
 - 📹 **업로드:** MP4 등 영상, 최대 50MB. 전신이 보이는 3~10초 영상이 가장 잘 맞습니다.
 - 📱 **IP Webcam:** `.env`의 `IP_WEBCAM_ALLOWED_URLS`에 등록한 카메라만, **8초** 수집합니다.
 
