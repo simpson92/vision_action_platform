@@ -69,6 +69,15 @@ class AnalysisApiTests(TestCase):
         job.refresh_from_db()
         self.assertEqual(job.celery_task_id, "task-123")
 
+    @mock.patch("analyses.views.run_analysis.delay")
+    def test_empty_title_uses_video_file_name(self, delay):
+        delay.return_value.id = "task-1"
+        self.client.force_login(self.a)
+        with self.captureOnCommitCallbacks(execute=True):
+            r = self.client.post("/api/analyses/", {"input_type": "upload", "video": video_file()})
+        job = AnalysisJob.objects.get(pk=r.json()["id"])
+        self.assertEqual(job.title, video_file().name)
+
     def test_upload_requires_video_and_valid_extension(self):
         self.client.force_login(self.a)
         self.assertEqual(self.client.post("/api/analyses/", {"input_type": "upload"}).status_code, 400)

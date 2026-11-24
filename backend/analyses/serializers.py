@@ -73,7 +73,17 @@ class AnalysisJobSerializer(serializers.ModelSerializer):
             attrs["camera_index"] = index
             attrs.pop("video", None)
             attrs["capture_seconds"] = settings.IP_WEBCAM_CAPTURE_SECONDS
+        if not (attrs.get("title") or "").strip():
+            attrs["title"] = default_title(attrs)
         return attrs
+
+
+def default_title(attrs):
+    """제목을 비워 두면 업로드한 영상 파일 이름(또는 카메라 번호)을 제목으로 씁니다."""
+    video = attrs.get("video")
+    if video is not None:
+        return Path(video.name).name[:100]
+    return f"IP Webcam · 카메라 {attrs.get('camera_index', 0) + 1}"
 
 
 class AnalysisJobUpdateSerializer(serializers.ModelSerializer):
