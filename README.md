@@ -302,7 +302,7 @@ sequenceDiagram
 <a href="docs/images/shots/analysis.png"><img src="docs/images/cards2/t02.png" width="49%" alt="T02"></a>
 </p>
 <p align="center">
-<img src="docs/images/cards2/t03_v2.png" width="49%" alt="T03">
+<a href="docs/images/shots/ip_webcam.png"><img src="docs/images/cards2/t03_v3.png" width="49%" alt="T03"></a>
 <a href="docs/images/shots/two_people.png"><img src="docs/images/cards2/t04.png" width="49%" alt="T04"></a>
 </p>
 <p align="center">
