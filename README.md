@@ -309,6 +309,9 @@ sequenceDiagram
 
 ## 8. 교재와 다르게 구현한 점과 이유
 
+<details>
+<summary>펼쳐 보기 (7가지 항목과 참고 논문)</summary>
+
 | 항목 | 교재·6~8일차 | 이 서비스 | 이유 |
 |---|---|---|---|
 | 판단 보류 기준 | 확률 0.55 미만이면 UNKNOWN | 확률 0.20 미만 **또는 1·2등 차이 0.03 미만**이면 판단 보류 | 6 clip으로 학습한 RF는 확률이 0.2~0.3대라 0.55면 7일차처럼 전부 UNKNOWN. S02로 기준을 다시 맞춤 |
@@ -324,7 +327,12 @@ sequenceDiagram
 - Puchała, Kasprzak, Piwowarski (2023). *Sensors* 23(14) — 포즈 Tracking + 슬라이딩 Window, 결측 관절 보정
 - Yan, Xiong, Lin (2018). *AAAI* — ST-GCN (데이터가 늘면 FastAPI 서버만 교체하는 확장 방향)
 
+</details>
+
 ## 9. 문제 해결 기록
+
+<details>
+<summary>펼쳐 보기 (해결한 오류 7가지)</summary>
 
 **1) 7일차처럼 모든 결과가 UNKNOWN**
 - 보인 문제: 정답 동작이 1등인데도 확률 0.25라 기준 0.55에 걸려 전부 UNKNOWN
@@ -356,6 +364,8 @@ sequenceDiagram
 - 확인한 곳: `docker compose logs fastapi` → YOLO warmup 중 `import torchvision`에서 실패
 - 원인: torch는 CPU 전용 저장소에서, torchvision은 ultralytics 의존성으로 PyPI에서 따로 설치돼 서로 다른 torch 판으로 빌드된 짝이 됨
 - 바꾼 것: Dockerfile에서 torch와 torchvision을 같은 CPU 저장소에서 함께 설치
+
+</details>
 
 ## 폴더 구조
 
